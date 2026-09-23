@@ -438,8 +438,11 @@ try {
     $java = Find-Java
     if ($java) {
         Write-Ok "Java $($java.Major) gefunden ($($java.Path))"
+        if ($java.Major -lt 8) {
+            throw "Java 8 oder neuer wird für den Fabric Installer benötigt (gefunden: $($java.Major))."
+        }
         if ($java.Major -lt 17) {
-            Write-Warn 'Java 17 wird zum Spielen von 1.20.1 empfohlen. Der offizielle Launcher lädt sich einen eigenen Java-Runtime.'
+            Write-Info 'Hinweis: Jede Java-Version ab 8 funktioniert für die Installation. Zum Spielen bringt der offizielle Launcher seinen eigenen Java-Runtime mit.'
         }
     } else {
         if ($script:Config.autoDownloadJava -eq $false) {
