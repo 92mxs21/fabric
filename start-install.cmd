@@ -9,7 +9,7 @@ echo.
 echo  Kein offizielles Produkt von Mojang/Microsoft.
 echo.
 pause
-set "URL=https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main/install.ps1"
+set "URL=https://raw.githubusercontent.com/92mxs21/fabric/main/install.ps1"
 set "DEST=%TEMP%\fabric-modpack-install.ps1"
 echo  Lade install.ps1 ...
 curl.exe -L -s -o "%DEST%" "%URL%"

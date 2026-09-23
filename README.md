@@ -2,13 +2,13 @@
 
 Ein Windows-PowerShell-Installationssystem für einen **Minecraft-1.20.1-Client mit Fabric** und exakt versionierten Mods von **Modrinth**. Installiert wird ausschließlich **Fabric / 1.20.1**.
 
-[🌐 GitHub Pages](https://92mxs21.github.io/fabric-1.20.1-modpack/) · [Modrinth](https://modrinth.com) · [Fabric](https://fabricmc.net)
+[🌐 GitHub Pages](https://92mxs21.github.io/fabric/) · [Modrinth](https://modrinth.com) · [Fabric](https://fabricmc.net)
 
 ---
 
 ## 🚀 Installation (einfachster Weg)
 
-1. **`start-install.cmd` herunterladen** – Button „Schnellstart laden" auf der [Website](https://92mxs21.github.io/fabric-1.20.1-modpack/) oder direkt [start-install.cmd](start-install.cmd).
+1. **`start-install.cmd` herunterladen** – Button „Schnellstart laden" auf der [Website](https://92mxs21.github.io/fabric/) oder direkt [start-install.cmd](start-install.cmd).
 2. **Doppelklick** auf die Datei. Falls Windows nachfragt: *Weitere Informationen → Trotzdem ausführen*.
 3. Das PowerShell-Fenster macht alles selbst: Java, Fabric-Profil, 7 Mods, Backup. Danach Launcher öffnen → Profil `fabric-loader-…` → spielen.
 

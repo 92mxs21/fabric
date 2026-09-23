@@ -26,7 +26,7 @@
      Cache, dann gezielter zeitbudgetierter JDK-Scan (ohne Voll-Rekursion).
    - modpack.json wird bis zu 6 h lokal gecacht (wie die Fabric-Meta).
    - Funktioniert als lokale Datei ODER per Einzeiler:
-       powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main/install.ps1 | iex"
+       powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/92mxs21/fabric/main/install.ps1 | iex"
 
   Aufruf:
    .\install.ps1                        (Standard: erkanntes .minecraft)
@@ -54,11 +54,11 @@ param(
 #------------------------------------------------------------------------------
 # Konstanten
 #------------------------------------------------------------------------------
-$script:RawBase        = 'https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main'
+$script:RawBase        = 'https://raw.githubusercontent.com/92mxs21/fabric/main'
 $script:FabricMetaBase = 'https://meta.fabricmc.net/v2'
 $script:FabricMaven    = 'https://maven.fabricmc.net'
 $script:ModrinthApi    = 'https://api.modrinth.com/v2'
-$script:UserAgent      = 'Install-PS1/1.2.1 (Fabric 1.20.1 Modpack; +https://github.com/92mxs21/fabric-1.20.1-modpack)'
+$script:UserAgent      = 'Install-PS1/1.2.1 (Fabric 1.20.1 Modpack; +https://github.com/92mxs21/fabric)'
 $script:ScriptVersion  = '1.2.1'
 
 $ErrorActionPreference = 'Stop'
