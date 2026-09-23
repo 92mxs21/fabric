@@ -1,0 +1,9 @@
+# Betriebssystem / Editor
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.tmp
+~$*
+
+# PowerShell / temporäre Dateien
+*.ps1.bak
