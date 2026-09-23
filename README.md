@@ -39,6 +39,11 @@ Fabric-Profil (neuester Loader für 1.20.1) und legt anschließend die Mods in `
 Während der Downloads zeigt das Script live, **bei welcher Mod** es gerade steht: Prozent,
 geladene/gesamte MB, MB/s und geschätzte Restzeit – plus Gesamtfortschritt (x/y Mods, MB).
 
+Seit v1.2.1 ist die **Java-Erkennung blitzschnell**: erst `java` auf PATH/JAVA_HOME sofort
+testen (kein Scan), dann ein Cache (`%LOCALAPPDATA%\fabric-modpack-tools\java-cache.json`),
+dann nur gezielte JDK-Ordner mit 2-s-Zeitbudget – kein minutenlanger Voll-Rekurs mehr durch
+`Program Files\Microsoft` & Co. Auch `modpack.json` wird bis zu 6 h lokal gecacht.
+
 ## 📦 Was installiert wird
 
 | Mod | Version | Datei (Fabric/1.20.1) | Bemerkung |
@@ -97,7 +102,7 @@ Jeder Download wird per SHA1 geprüft.
     "minecraft": "1.20.1",
     "loader": "0.19.5",
     "installer": "1.1.2",
-    "script": "1.2.0"
+    "script": "1.2.1"
   },
   "mods": [
     {
@@ -126,7 +131,7 @@ Es wird immer nur die primäre `.jar`-Datei eines Fabric-/1.20.1-Releases instal
 ## 🏗️ Projektstruktur
 
 ```
-├── install.ps1            # Hauptscript v1.2.0 (idempotent, Live-Fortschritt + Restzeit)
+├── install.ps1            # Hauptscript v1.2.1 (idempotent, Live-Fortschritt, blitzschnelle Java-Erkennung)
 ├── start-install.cmd      # Schnellstarter: lädt install.ps1 als lokale Datei & führt sie aus
 ├── index.html             # GitHub Pages Website (Dark Theme, Download-Buttons, Mod-Tabelle live)
 ├── style.css              # Website-Styling (dark, animierter Hintergrund, Fonts lokal)

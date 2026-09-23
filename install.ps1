@@ -1,5 +1,5 @@
 ﻿<# ================================================================================
-  Minecraft 1.20.1 + Fabric Modpack-Installer (Windows PowerShell)  v1.2.0
+  Minecraft 1.20.1 + Fabric Modpack-Installer (Windows PowerShell)  v1.2.1
 ===============================================================================
   Installiert NUR Minecraft 1.20.1 mit:
    - offiziellem Fabric Installer (CLI, neueste Loader-Version automatisch)
@@ -22,6 +22,9 @@
    - Live-Download-Fortschritt: bei WELCHER Mod, wie viel (%), wie schnell
      (MB/s) und wie lange es noch dauert (Restzeit-Einschätzung).
    - Fehlerbehandlung mit Retry und SHA1-Verifikation aller Downloads.
+   - Blitzschnelle Java-Erkennung: PATH/JAVA_HOME zuerst (kein Scan), dann
+     Cache, dann gezielter zeitbudgetierter JDK-Scan (ohne Voll-Rekursion).
+   - modpack.json wird bis zu 6 h lokal gecacht (wie die Fabric-Meta).
    - Funktioniert als lokale Datei ODER per Einzeiler:
        powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main/install.ps1 | iex"
 
@@ -55,8 +58,8 @@ $script:RawBase        = 'https://raw.githubusercontent.com/92mxs21/fabric-1.20.
 $script:FabricMetaBase = 'https://meta.fabricmc.net/v2'
 $script:FabricMaven    = 'https://maven.fabricmc.net'
 $script:ModrinthApi    = 'https://api.modrinth.com/v2'
-$script:UserAgent      = 'Install-PS1/1.2.0 (Fabric 1.20.1 Modpack; +https://github.com/92mxs21/fabric-1.20.1-modpack)'
-$script:ScriptVersion  = '1.2.0'
+$script:UserAgent      = 'Install-PS1/1.2.1 (Fabric 1.20.1 Modpack; +https://github.com/92mxs21/fabric-1.20.1-modpack)'
+$script:ScriptVersion  = '1.2.1'
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference    = 'SilentlyContinue'
@@ -211,6 +214,12 @@ function ConvertTo-NormalizedVersion {
 #------------------------------------------------------------------------------
 function Get-JavaMajor {
     param([string]$JavaPath)
+    # WICHTIG (PS 5.1-Falle): $ErrorActionPreference steht hier auf 'Stop'.
+    # In Windows PowerShell 5.1 wirft "2>&1" bei nativer stderr-Ausgabe einen
+    # Abbruchfehler - und "java -version" schreibt NACH stderr! Deshalb während
+    # des Aufrufs lokal auf 'Continue' schalten und danach wiederherstellen.
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     try {
         $line = (& $JavaPath '-version' 2>&1 | Select-Object -First 1 | Out-String)
         if ($line -match 'version "([0-9]+)') {
@@ -219,29 +228,97 @@ function Get-JavaMajor {
             return $major
         }
     } catch {}
+    finally { $ErrorActionPreference = $prev }
     return 0
 }
 
+function Invoke-EnsureToolsDir {
+    $d = Join-Path $env:LOCALAPPDATA 'fabric-modpack-tools'
+    New-Item -ItemType Directory -Path $d -Force | Out-Null
+    return $d
+}
+
+function Save-JavaCache([string]$Path, [int]$Major) {
+    if ($script:DryRun) { return }
+    try {
+        $dir = Invoke-EnsureToolsDir
+        @{ path = $Path; major = $Major; found = (Get-Date).ToString('o') } |
+            ConvertTo-Json | Set-Content -Path (Join-Path $dir 'java-cache.json') -Encoding UTF8
+    } catch {}
+}
+
 function Find-Java {
-    # Reihenfolge = Geschwindigkeit: PATH und JAVA_HOME zuerst (da fast immer ein
-    # Java dort hängt), die riesigen Programmordner-Allgemein suchen ist langsam.
-    $cands = @()
-    $cmd = Get-Command java -ErrorAction SilentlyContinue
-    if ($cmd) { $cands += $cmd.Source }
-    if ($env:JAVA_HOME) { $cands += (Join-Path $env:JAVA_HOME 'bin\java.exe') }
-    # nur Java-bezogene Unterordner von Program Files durchsuchen (schnell)
-    $pf = @($env:ProgramFiles, ${env:ProgramFiles(x86)}) | Where-Object { $_ }
-    foreach ($p in $pf) {
-        $javaDirs = @(Get-ChildItem $p -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'Java|Adoptium|Temurin|Zulu|Microsoft|Eclipse' })
-        foreach ($d in $javaDirs) {
-            $cands += @(Get-ChildItem $d.FullName -Filter java.exe -Recurse -Depth 4 -ErrorAction SilentlyContinue | ForEach-Object FullName)
-        }
-    }
-    $cands += @(Get-ChildItem (Join-Path $env:LOCALAPPDATA 'fabric-modpack-jre') -Filter java.exe -Recurse -Depth 4 -ErrorAction SilentlyContinue | ForEach-Object FullName)
-    foreach ($c in @($cands | Select-Object -Unique)) {
+    # Reihenfolge = Geschwindigkeit (WICHTIG):
+    #  1) java auf PATH bzw. JAVA_HOME SOFORT testen - ohne Festplatten-Scan.
+    #  2) zuletzt verwendetes Java aus dem Cache übernehmen (falls noch da).
+    #  3) eigene JRE-Ablage (fabric-modpack-jre) durchsuchen.
+    #  4) gezielt NUR bekannte JDK-Roots in Program Files, mit 2s-Zeitbudget.
+    #     Früher wurde u.a. "Program Files\Microsoft" (Visual Studio, SQL Server...)
+    #     komplett rekursiv durchsucht - das dauert über eine Minute, sogar dann,
+    #     wenn java längst über PATH gefunden wäre. Genau das war der Hänger.
+    function Test-Candidate([string]$c) {
         if ($c -and (Test-Path $c)) {
             $major = Get-JavaMajor $c
             if ($major -gt 0) { return [pscustomobject]@{ Path = $c; Major = $major } }
+        }
+        return $null
+    }
+
+    # --- 1) PATH + JAVA_HOME sofort ------------------------------------------
+    $cmd = Get-Command java -ErrorAction SilentlyContinue
+    if ($cmd) {
+        $j = Test-Candidate $cmd.Source
+        if ($j) { Save-JavaCache $j.Path $j.Major; return $j }
+    }
+    if ($env:JAVA_HOME) {
+        $j = Test-Candidate (Join-Path $env:JAVA_HOME 'bin\java.exe')
+        if ($j) { Save-JavaCache $j.Path $j.Major; return $j }
+    }
+
+    # --- 2) Cache ------------------------------------------------------------
+    try {
+        $cacheFile = Join-Path (Invoke-EnsureToolsDir) 'java-cache.json'
+        if (Test-Path $cacheFile) {
+            $cached = Get-Content $cacheFile -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($cached.path) {
+                $j = Test-Candidate $cached.path
+                if ($j) { return $j }
+            }
+        }
+    } catch {}
+
+    # --- 3) eigene JRE-Ablage ------------------------------------------------
+    $jreRoot = Join-Path $env:LOCALAPPDATA 'fabric-modpack-jre'
+    if (Test-Path $jreRoot) {
+        # Achtung: In PowerShell 5.1 zählt -Depth die Ebenen ab dem Startordner
+        # (jre17\jdk-...\bin\java.exe = 4 Ebenen) -> deshalb großzügig -Depth 5.
+        $f = Get-ChildItem $jreRoot -Filter java.exe -Depth 5 -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($f) {
+            $j = Test-Candidate $f.FullName
+            if ($j) { Save-JavaCache $j.Path $j.Major; return $j }
+        }
+    }
+
+    # --- 4) gezielter, zeitbudgetierter JDK-Scan ------------------------------
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    $pf = @($env:ProgramFiles, ${env:ProgramFiles(x86)}) | Where-Object { $_ -and (Test-Path $_) }
+    $rootRx = '^(Java|Eclipse Adoptium|Microsoft|Zulu|AdoptOpenJDK|Amazon Corretto|BellSoft|Semeru|RedHat|Eclipse)( |$)'
+    $subRx  = 'jdk|jre|jbr|temurin|zulu|corretto|openjdk|java|msopenjdk'
+    foreach ($p in $pf) {
+        if ($sw.Elapsed.TotalSeconds -gt 2) { break }
+        foreach ($r in @(Get-ChildItem $p -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match $rootRx })) {
+            if ($sw.Elapsed.TotalSeconds -gt 2) { break }
+            $subs = @(Get-ChildItem $r.FullName -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match $subRx })
+            if ($subs.Count -eq 0) { $subs = @($r) }
+            foreach ($s in $subs) {
+                if ($sw.Elapsed.TotalSeconds -gt 2) { break }
+                $j = Test-Candidate (Join-Path $s.FullName 'bin\java.exe')
+                if (-not $j) {
+                    $f = Get-ChildItem $s.FullName -Filter java.exe -Depth 3 -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+                    if ($f) { $j = Test-Candidate $f.FullName }
+                }
+                if ($j) { Save-JavaCache $j.Path $j.Major; return $j }
+            }
         }
     }
     return $null
@@ -249,6 +326,10 @@ function Find-Java {
 
 function Install-TemurinJre {
     $tools = Join-Path $env:LOCALAPPDATA 'fabric-modpack-jre'
+    if ($script:DryRun) {
+        Write-Info 'DryRun: würde Temurin JRE 17 (ca. 42 MB) herunterladen und nach dem Fabric-Install ab in "%LOCALAPPDATA%\fabric-modpack-jre" ablegen.'
+        return (Join-Path $tools 'jre17\bin\java.exe')
+    }
     New-Item -ItemType Directory -Path $tools -Force | Out-Null
     $zip = Join-Path $tools 'jre17.zip'
     Write-Info 'Lade Temurin JRE 17 herunter (für den Fabric Installer) ...'
@@ -266,8 +347,7 @@ function Install-TemurinJre {
 #------------------------------------------------------------------------------
 function Get-FabricVersions {
     param([string]$McVer)
-    $toolsDir = Join-Path $env:LOCALAPPDATA 'fabric-modpack-tools'
-    New-Item -ItemType Directory -Path $toolsDir -Force | Out-Null
+    $toolsDir = Invoke-EnsureToolsDir
     $cacheFile = Join-Path $toolsDir 'fabric-meta-cache.json'
     $cache = $null
     if (Test-Path $cacheFile) {
@@ -320,7 +400,11 @@ function Invoke-FabricInstaller {
         Write-Info "DryRun: Befehl wäre:`n      & `"$JavaPath`" -jar `"$InstallerJar`" client -dir `"$McDir`" -mcversion $McVer -loader $LoaderVer"
         return
     }
-    $output = & $JavaPath '-jar' $InstallerJar 'client' '-dir' $McDir '-mcversion' $McVer '-loader' $LoaderVer 2>&1
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'   # sonst wirft PS 5.1 bei stderr des Fabric Installers
+    try {
+        $output = & $JavaPath '-jar' $InstallerJar 'client' '-dir' $McDir '-mcversion' $McVer '-loader' $LoaderVer 2>&1
+    } finally { $ErrorActionPreference = $prev }
     foreach ($line in $output) {
         if ($line -is [System.Management.Automation.ErrorRecord]) {
             Write-Warn ($line.ToString())
@@ -456,9 +540,32 @@ try {
         if ($localConfig -and (Test-Path $localConfig)) {
             $ConfigPath = $localConfig
         } else {
-            $ConfigPath = Join-Path $env:TEMP 'modpack-1.20.1.json'
-            Write-Info 'Keine lokale Konfiguration gefunden - lade modpack.json aus dem Repository ...'
-            Invoke-FileDownload -Url "$script:RawBase/config/modpack.json" -OutFile $ConfigPath -Label 'modpack.json'
+            # Schnell: modpack.json einmal laden und bis zu 6 h lokal cachen
+            # (gleicher Cache-Ordner wie die Fabric-Meta, wie java-cache.json).
+            $toolsDir = Invoke-EnsureToolsDir
+            $cfgCache = Join-Path $toolsDir 'modpack-cache-1.20.1.json'
+            $useCache = $false
+            if (Test-Path $cfgCache) {
+                try {
+                    $cMeta = Get-Content $cfgCache -Raw -Encoding UTF8 | ConvertFrom-Json
+                    if ($cMeta.json -and ((Get-Date) - [datetime]::Parse($cMeta.fetched)).TotalHours -lt 6) { $useCache = $true }
+                } catch {}
+            }
+            if ($useCache -and -not $script:Force) {
+                $ConfigPath = Join-Path $env:TEMP 'modpack-1.20.1.json'
+                Set-Content -Path $ConfigPath -Value $cMeta.json -Encoding UTF8
+                Write-Info 'modpack.json aus dem lokalen Cache (max. 6 h alt) geladen.'
+            } else {
+                $ConfigPath = Join-Path $env:TEMP 'modpack-1.20.1.json'
+                Write-Info 'Keine lokale Konfiguration - lade modpack.json aus dem Repository ...'
+                Invoke-FileDownload -Url "$script:RawBase/config/modpack.json" -OutFile $ConfigPath -Label 'modpack.json'
+                if (-not $script:DryRun) {
+                    try {
+                        @{ fetched = (Get-Date).ToString('o'); json = (Get-Content $ConfigPath -Raw -Encoding UTF8) } |
+                            ConvertTo-Json -Depth 6 | Set-Content -Path $cfgCache -Encoding UTF8
+                    } catch {}
+                }
+            }
         }
     }
     if (-not (Test-Path $ConfigPath)) { throw "Konfiguration nicht gefunden: $ConfigPath" }
@@ -496,10 +603,10 @@ try {
         if ($script:Config.autoDownloadJava -eq $false) {
             throw 'Kein Java gefunden und autoDownloadJava ist deaktiviert. Installiere Java 17 oder aktiviere autoDownloadJava in der Konfiguration.'
         }
-        Write-Warn 'Kein Java gefunden - lade Temurin JRE 17 automatisch herunter.'
+        Write-Warn 'Kein Java auf PATH/JAVA_HOME oder als lokale Installation gefunden.'
         $autoJava = Install-TemurinJre
         $java = [pscustomobject]@{ Path = $autoJava; Major = 17 }
-        Write-Ok "Java 17 installiert ($($java.Path))"
+        Write-Ok "Java 17 bereit ($($java.Path))"
     }
     if ($script:DryRun) { Write-Info 'DryRun: Java würde nur zum Installieren des Fabric-Loaders verwendet.' }
 
@@ -512,9 +619,7 @@ try {
     Write-Ok "Fabric Installer: $installerVer"
 
     Write-StepTitle 'Schritt 5/10: Fabric Installer herunterladen'
-    $toolsDir = Join-Path $env:LOCALAPPDATA 'fabric-modpack-tools'
-    New-Item -ItemType Directory -Path $toolsDir -Force | Out-Null
-    $installerJar = Join-Path $toolsDir "fabric-installer-$installerVer.jar"
+    $installerJar = Join-Path (Invoke-EnsureToolsDir) "fabric-installer-$installerVer.jar"
     $installerUrl = "$script:FabricMaven/net/fabricmc/fabric-installer/$installerVer/fabric-installer-$installerVer.jar"
     if ($script:DryRun) {
         Write-Info "DryRun: Download übersprungen (wäre: $installerUrl)"

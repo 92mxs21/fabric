@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "scriptVersion": "1.2.0",
+  "scriptVersion": "1.2.1",
   "minecraftVersion": "1.20.1",
   "loader": "fabric",
   "autoDownloadJava": true,
@@ -8,7 +8,7 @@
     "minecraft": "1.20.1",
     "loader": "0.19.5",
     "installer": "1.1.2",
-    "script": "1.2.0"
+    "script": "1.2.1"
   },
   "mods": [
     {
