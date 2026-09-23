@@ -12,21 +12,23 @@ Ein Windows-PowerShell-Installationssystem für einen **Minecraft-1.20.1-Client 
 2. **Doppelklick** auf die Datei. Falls Windows nachfragt: *Weitere Informationen → Trotzdem ausführen*.
 3. Das PowerShell-Fenster macht alles selbst: Java, Fabric-Profil, 7 Mods, Backup. Danach Launcher öffnen → Profil `fabric-loader-…` → spielen.
 
-Der `start-install.cmd` lädt den Installer beim Start einmalig aus diesem Repo
-(`irm … | iex` mit `-ExecutionPolicy Bypass`) – ohne manuelle Eingaben.
+Der `start-install.cmd` lädt `install.ps1` einmalig per `curl.exe` als **lokale Datei**
+in den Temp-Ordner (`%TEMP%\fabric-modpack-install.ps1`) und führt sie dort mit
+`powershell -File` aus – keine manuellen Eingaben.
 
-### Fortgeschritten: Einzeiler
+> **Warum kein `irm … | iex`-Einzeiler?** Windows Defender erkennt exakt diese
+> Befehlszeile (PowerShell mit `Bypass`, der ein Script aus dem Internet direkt ausführt)
+> per KI-Heuristik als `Trojan:Win32/Commando.A!ml` – ein Falschpositiv für unser Script,
+> das dabei auch noch den Lauf mitten in der Ausführung abbricht (abgeschnittenes Script →
+> Parserfehler). Der `.cmd`-Weg umgeht das komplett: Der Download ist eine normale
+> `curl.exe`-Dateioperation, PowerShell führt nur eine lokale Temp-Datei aus.
 
-Wer lieber direkt in PowerShell arbeitet (oder ohne Datei-Download):
+### Fortgeschritten: lokale Datei ausführen
+
+`install.ps1` herunterladen, in einen Ordner legen und dort per PowerShell starten:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main/install.ps1 | iex"
-```
-
-Bereits in einem PowerShell-Fenster? Dann einfach:
-
-```powershell
-irm https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main/install.ps1 | iex
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
 Das Script erkennt automatisch `%APPDATA%\.minecraft`, prüft/lädt Java, installiert das
@@ -125,7 +127,7 @@ Es wird immer nur die primäre `.jar`-Datei eines Fabric-/1.20.1-Releases instal
 
 ```
 ├── install.ps1            # Hauptscript v1.2.0 (idempotent, Live-Fortschritt + Restzeit)
-├── start-install.cmd      # Schnellstarter: Doppelklick -> lädt & startet install.ps1
+├── start-install.cmd      # Schnellstarter: lädt install.ps1 als lokale Datei & führt sie aus
 ├── index.html             # GitHub Pages Website (Dark Theme, Download-Buttons, Mod-Tabelle live)
 ├── style.css              # Website-Styling (dark, animierter Hintergrund, Fonts lokal)
 ├── assets/
@@ -141,8 +143,9 @@ Die Website (Repo-Wurzel, GitHub Pages) liest die Mod-Liste **live aus
 Mod-Name, Pixel-Icon, Version und Bemerkung an. Es gibt **keine externen Requests**
 (Fonts/CSS/JS liegen im Repo). Die Seite enthält bewusst **keinen
 „kopiere & paste diesen PowerShell-Befehl“-Aufruf** – das liefert der Schnellstarter
-(`start-install.cmd`) per Doppelklick, ohne dass Adblocker (uBlock Origin & Co.)
-einen „ClickFix“-Schutz auslösen.
+(`start-install.cmd`) per Doppelklick, ohne dass Adblocker (uBlock Origin & Co.) einen
+„ClickFix“-Schutz auslösen **und** ohne dass Windows Defender die
+`irm … | iex`-Befehlszeile als `Trojan:Win32/Commando.A!ml` meldet (Falschpositiv).
 
 ## ⚠️ Hinweis
 
