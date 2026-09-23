@@ -103,16 +103,17 @@ Minecraft-Versionen werden ignoriert.
 
 ```
 ├── install.ps1            # Hauptscript (idempotent, mit Fortschrittsanzeige)
+├── index.html             # GitHub Pages Website (One-Line-Befehl)
+├── style.css              # Website-Styling (Minecraft-UI, echte Texturen)
+├── assets/mc/             # Echte Mojang-Texturen aus dem 1.20.1-Client
 ├── config/
 │   └── modpack.json       # Versions-Pinning der Mods
-├── docs/                  # GitHub Pages Website (One-Line-Befehl)
-│   ├── index.html
-│   └── style.css
 └── README.md
 ```
 
-Die Website unter `docs/` liest die Mod-Liste **live aus `config/modpack.json`**
-(Fetch im Browser) und zeigt Mod-Name, Version und Bemerkung an.
+Die Website (Repot-Wurzel, GitHub Pages) liest die Mod-Liste **live aus
+`config/modpack.json`** (gleiche Origin – kein CDN-Cache-Problem) und zeigt
+Mod-Name, Item-Icon, Version und Bemerkung an.
 
 ## ⚠️ Hinweis
 

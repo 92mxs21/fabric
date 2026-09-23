@@ -200,7 +200,9 @@
 
   /* ---------- Konfiguration laden (mit Fallbacks) ---------- */
   function fetchConfig() {
-    var sources = [RAW, "../config/modpack.json", "./config/modpack.json"];
+    // 1) same-origin: auf GitHub Pages liegt config/ direkt im Repo -> immer aktuell
+    // 2) Raw als Fallback (falls jemand die Datei woanders hinkopiert)
+    var sources = ["./config/modpack.json", RAW];
     var lastErr = null;
     function attempt() {
       if (!sources.length) return Promise.reject(lastErr || new Error("k.A."));
