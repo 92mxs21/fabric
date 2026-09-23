@@ -59,6 +59,17 @@
         <p class="dl-hint">Am einfachsten: <b>„Schnellstart laden“</b>, danach Doppelklick auf die Datei.</p>
       </div>
 
+      <div class="dl-card cmd-card">
+        <label class="cmd-label" for="cmdinput">ODER SOFORT PER BEFEHL (lädt &amp; startet direkt)</label>
+        <div class="cmd-row">
+          <input id="cmdinput" class="cmd" readonly
+                 value="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;irm https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main/install.ps1 | iex&quot;"
+                 aria-label="Einzeiler für den Sofort-Start">
+          <button type="button" class="btn btn-primary btn-copy" id="copybtn" onclick="window.__doCopy && window.__doCopy()">KOPIEREN</button>
+        </div>
+        <p class="dl-hint">Für Profis: in PowerShell einfügen &amp; Enter – lädt und startet sofort. Die Seite selbst ist anti-Adblocker aufgebaut, der Befehl ist nur der Weg ohne Datei-Download.</p>
+      </div>
+
       <ul class="facts">
         <li><b>7</b> Mods, alle von Modrinth</li>
         <li><b>1.20.1</b> nur mit Fabric</li>
@@ -166,6 +177,60 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
     });
   }
+
+  /* ---------- Kopieren: 3 Wege, unzerstörbar (egal ob Adblocker oder uBlock) ---------- */
+  var CMD = (document.getElementById("cmdinput") || {}).value || "";
+
+  function copyPulse(btn) {
+    if (!btn) { btn = document.getElementById("copybtn"); }
+    if (btn) {
+      var old = btn.textContent;
+      btn.textContent = "KOPIERT ✓";
+      btn.classList.add("copied");
+      setTimeout(function () { btn.textContent = old; btn.classList.remove("copied"); }, 1500);
+    }
+  }
+
+  function legacyCopy(text, okcb) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    if (ok) { okcb(); return true; }
+    // Notnagel: Befehl bleibt sichtbar markiert -> Strg+C geht immer
+    var inp = document.getElementById("cmdinput");
+    if (inp) { inp.focus(); inp.select(); }
+    return false;
+  }
+
+  var lastCopy = 0;
+  function doCopy() {
+    var now = Date.now();
+    if (now - lastCopy < 250) { return; } // onclick + Listener doppelt? egal.
+    lastCopy = now;
+    var btn = document.getElementById("copybtn");
+    if (!CMD) {
+      var inp = document.getElementById("cmdinput");
+      if (inp) { inp.select(); }
+      return;
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(CMD)
+        .then(function () { copyPulse(btn); })
+        .catch(function () { legacyCopy(CMD, function () { copyPulse(btn); }); });
+    } else {
+      legacyCopy(CMD, function () { copyPulse(btn); });
+    }
+  }
+  window.__doCopy = doCopy;
+  var copyBtn = document.getElementById("copybtn");
+  if (copyBtn) { copyBtn.addEventListener("click", doCopy); }
 
   function fetchConfig() {
     return fetch(CONFIG_URL, { cache: "no-store" })

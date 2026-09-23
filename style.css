@@ -216,6 +216,39 @@ a { color: var(--green-strong); }
   color: var(--muted);
 }
 
+/* Sofort-Start per Befehl (kopierbar) */
+.cmd-card { margin-top: 14px; }
+.cmd-label {
+  display: block;
+  margin-bottom: 10px;
+  font-family: var(--pix);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: var(--gold);
+}
+.cmd-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+.cmd {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 18px;
+  color: var(--green-strong);
+  background: #0a100c;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+  user-select: all;
+}
+.cmd:focus { outline: 2px solid rgba(63, 191, 94, 0.5); }
+.btn-copy { flex: none; align-self: center; white-space: nowrap; }
+.btn-copy.copied { background: linear-gradient(180deg, #4fd96f, #2f9e49); }
+.cmd-card .dl-hint { margin-top: 12px; }
+
 /* Fakten */
 .facts {
   list-style: none;
@@ -432,6 +465,8 @@ a { color: var(--green-strong); }
   .steps { grid-template-columns: 1fr; }
   .dl-row { flex-direction: column; }
   .btn { width: 100%; }
+  .cmd-row { flex-direction: column; }
+  .cmd { font-size: 15px; }
   .modver { font-size: 15px; }
   .brand-name { font-size: 10px; }
   .hero { padding: 56px 0 80px; }
