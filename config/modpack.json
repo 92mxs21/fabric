@@ -16,6 +16,7 @@
       "slug": "architectury-api",
       "version": "9.2.14",
       "modrinthVersion": "9.2.14+fabric",
+      "icon": "enchanted_book",
       "bemerkung": "Multi-Loader-API (Fabric/Forge) – wird von vielen Mods mitgenutzt"
     },
     {
@@ -23,6 +24,7 @@
       "slug": "cloth-config",
       "version": "11.1.136",
       "modrinthVersion": "11.1.136+fabric",
+      "icon": "experience_bottle",
       "bemerkung": "Konfigurations-API für Mods mit eigenem Einstellungsmenü"
     },
     {
@@ -30,6 +32,7 @@
       "slug": "dreamshift",
       "version": "0.1.4.3.1",
       "modrinthVersion": "0.1.4.3.1-fabric",
+      "icon": "golden_apple",
       "bemerkung": "Spielstand sicher speichern und an einer Basis weiterstarten"
     },
     {
@@ -37,6 +40,7 @@
       "slug": "fabric-api",
       "version": "0.92.12+1.20.1",
       "modrinthVersion": "0.92.12+1.20.1",
+      "icon": "iron_ingot",
       "bemerkung": "Basis-API – wird von fast allen anderen Mods vorausgesetzt"
     },
     {
@@ -44,6 +48,7 @@
       "slug": "immersiveportals",
       "version": "5.2.0",
       "modrinthVersion": "5.2.0",
+      "icon": "ender_pearl",
       "bemerkung": "Nahtlose Portale zwischen Dimensionen und Orten"
     },
     {
@@ -51,6 +56,7 @@
       "slug": "sodium",
       "version": "0.5.13",
       "modrinthVersion": "mc1.20.1-0.5.13-fabric",
+      "icon": "diamond",
       "bemerkung": "Leistungsstarker Renderer – deutlich mehr Bilder pro Sekunde"
     },
     {
@@ -58,6 +64,7 @@
       "slug": "simple-voice-chat",
       "version": "2.4.32",
       "modrinthVersion": "fabric-1.20.1-2.4.32",
+      "icon": "totem_of_undying",
       "bemerkung": "Sprachchat direkt im Spiel (Push-to-Talk oder Freisprechen)"
     }
   ]
