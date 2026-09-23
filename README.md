@@ -2,7 +2,7 @@
 
 Ein Windows-PowerShell-Installationssystem für einen **Minecraft-1.20.1-Client mit Fabric** und exakt versionierten Mods von **Modrinth**. Installiert wird ausschließlich **Fabric / 1.20.1**.
 
-[🌐 GitHub Pages](https://DeutscherCOder.github.io/fabric-1.20.1-modpack/) · [Modrinth](https://modrinth.com) · [Fabric](https://fabricmc.net)
+[🌐 GitHub Pages](https://92mxs21.github.io/fabric-1.20.1-modpack/) · [Modrinth](https://modrinth.com) · [Fabric](https://fabricmc.net)
 
 ---
 
@@ -11,13 +11,13 @@ Ein Windows-PowerShell-Installationssystem für einen **Minecraft-1.20.1-Client 
 In PowerShell **oder** in `cmd` einfügen:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/DeutscherCOder/fabric-1.20.1-modpack/main/install.ps1 | iex"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main/install.ps1 | iex"
 ```
 
 Bereits in einem PowerShell-Fenster? Dann einfach:
 
 ```powershell
-irm https://raw.githubusercontent.com/DeutscherCOder/fabric-1.20.1-modpack/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main/install.ps1 | iex
 ```
 
 Das Script erkennt automatisch `%APPDATA%\.minecraft`, prüft/lädt Java, installiert das
