@@ -25,6 +25,9 @@ Fabric-Profil (neuester Loader für 1.20.1) und legt anschließend die Mods in `
 **Nicht benötigte, bereits vorhandene `.jar`-Mods** werden vorher in einen datierten
 `<Zeitstempel>modbackup`-Ordner verschoben (z. B. `20260923-143000modbackup`).
 
+Während der Downloads zeigt das Script live, **bei welcher Mod** es gerade steht: Prozent,
+geladene/gesamte MB, MB/s und geschätzte Restzeit – plus Gesamtfortschritt (x/y Mods, MB).
+
 ## 📦 Was installiert wird
 
 | Mod | Version | Datei (Fabric/1.20.1) | Bemerkung |
@@ -37,8 +40,11 @@ Fabric-Profil (neuester Loader für 1.20.1) und legt anschließend die Mods in `
 | Sodium | 0.5.13 | `sodium-fabric-0.5.13+mc1.20.1.jar` | Deutlich mehr FPS |
 | Simple Voice Chat | 2.4.32 | `voicechat-fabric-1.20.1-2.4.32.jar` | Sprachchat im Spiel |
 
-Alle Versionen wurden gegen die **Modrinth API** verifiziert; jeder Download wird per
-SHA1-Prüfsumme geprüft. Die Mod-Versionen sind in [`config/modpack.json`](config/modpack.json) fest gepinnt.
+Die Datei-URLs **und** SHA1-Prüfsummen aller Mods sind in
+[`config/modpack.json`](config/modpack.json) fest gepinnt. Dadurch fragt das Script für die
+Mods **keine Modrinth-API ab** (schneller & robuster); nur wenn ein gepinnter Hash nicht zu
+einer frisch heruntergeladenen Datei passt, wird einmalig die API als Fallback befragt.
+Jeder Download wird per SHA1 geprüft.
 
 ## ⚙️ Nutzung des Scripts
 
@@ -61,13 +67,13 @@ SHA1-Prüfsumme geprüft. Die Mod-Versionen sind in [`config/modpack.json`](conf
 1. Konfiguration aus `config/modpack.json` laden
 2. Minecraft-Verzeichnis bestimmen (`-MinecraftDir` oder `%APPDATA%\.minecraft`)
 3. Java prüfen (Autodownload bei Bedarf)
-4. Neuesten **Fabric Loader** für 1.20.1 von `meta.fabricmc.net` ermitteln
+4. Neuesten **Fabric Loader** für 1.20.1 von `meta.fabricmc.net` ermitteln (6h-Cache in `%LOCALAPPDATA%\fabric-modpack-tools`)
 5. Offiziellen Fabric Installer (neueste Version) herunterladen
 6. Profil per CLI installieren:
    `java -jar fabric-installer.jar client -mcversion 1.20.1 -loader <neueste> -dir <verzeichnis>`
-7. Mod-Infos von der Modrinth API abrufen (nur `loaders=fabric`, `game_versions=1.20.1`)
+7. Mod-Dateien aus der gepinnten Config lesen (kein API-Call, Fallback: Modrinth API)
 8. Fremde `.jar`-Mods nach `<Zeitstempel>modbackup` (direkt neben `mods/`) verschieben
-9. Mods herunterladen + SHA1-verifizieren (idempotent – korrekte Dateien werden übersprungen)
+9. Mods herunterladen + SHA1-verifizieren (idempotent – korrekte Dateien werden übersprungen; Live-Fortschritt mit % / MB / MB/s / Restzeit)
 
 ## 🔧 Konfiguration (`config/modpack.json`)
 
@@ -80,40 +86,50 @@ SHA1-Prüfsumme geprüft. Die Mod-Versionen sind in [`config/modpack.json`](conf
     "minecraft": "1.20.1",
     "loader": "0.19.5",
     "installer": "1.1.2",
-    "script": "1.1.0"
+    "script": "1.2.0"
   },
   "mods": [
     {
       "name": "Sodium",
-      "slug": "sodium",              // Modrinth-Slug
-      "version": "0.5.13",           // gewünschte Version
+      "slug": "sodium",                    // Modrinth-Slug
+      "version": "0.5.13",                 // gewünschte Version
       "modrinthVersion": "mc1.20.1-0.5.13-fabric", // exakte Modrinth-Versionsnummer
-      "bemerkung": "Deutlich mehr FPS"             // kurzer Hinweis (Website/README)
+      "bemerkung": "Deutlich mehr FPS",    // kurzer Hinweis (Website/README)
+      "file": "sodium-fabric-0.5.13+mc1.20.1.jar", // gepinnter Dateiname
+      "size": 971552,                      // exakte Dateigröße in Bytes
+      "sha1": "bcdbf37d…",                 // gepinnte SHA1-Prüfsumme
+      "url": "https://cdn.modrinth.com/…"  // direkte Download-URL
     }
   ]
 }
 ```
 
-`modrinthVersion` ist optional – ohne sie sucht das Script anhand der normalisierten
-Versionsnummer (`mc1.20.1-0.5.13-fabric` → `0.5.13`). Es wird immer nur die primäre
-`.jar`-Datei eines Fabric-/1.20.1-Releases installiert; Dateien anderer Loader oder
-Minecraft-Versionen werden ignoriert.
+`file`/`size`/`sha1`/`url` sind optional: fehlen sie, fällt das Script auf die Modrinth-API
+zurück (`loaders=fabric`, `game_versions=1.20.1`). `modrinthVersion` ist optional – ohne sie
+sucht das Script anhand der normalisierten Versionsnummer (`mc1.20.1-0.5.13-fabric` → `0.5.13`).
+Es wird immer nur die primäre `.jar`-Datei eines Fabric-/1.20.1-Releases installiert.
+
+> **Encoding-Hinweis:** `install.ps1` **muss UTF-8 mit BOM** sein (Umlaute ä/ö/ü). Nicht als
+> ANSI speichern – sonst ist die Ausgabe ein Buchstabensalat.
 
 ## 🏗️ Projektstruktur
 
 ```
-├── install.ps1            # Hauptscript (idempotent, mit Fortschrittsanzeige)
-├── index.html             # GitHub Pages Website (One-Line-Befehl)
-├── style.css              # Website-Styling (Minecraft-UI, echte Texturen)
-├── assets/mc/             # Echte Mojang-Texturen aus dem 1.20.1-Client
+├── install.ps1            # Hauptscript v1.2.0 (idempotent, Live-Fortschritt + Restzeit)
+├── index.html             # GitHub Pages Website (Copy-Paste-Befehl, Mod-Tabelle live)
+├── style.css              # Website-Styling (modern/hell, Fonts lokal gehostet)
+├── assets/
+│   ├── mc/                # Echte Mojang-Texturen aus dem 1.20.1-Client
+│   └── fonts/             # VT323 + Press Start 2P (OFL) – lokal, kein CDN nötig
 ├── config/
-│   └── modpack.json       # Versions-Pinning der Mods
+│   └── modpack.json       # Versions-Pinning inkl. file/sha1/url
 └── README.md
 ```
 
-Die Website (Repot-Wurzel, GitHub Pages) liest die Mod-Liste **live aus
+Die Website (Repo-Wurzel, GitHub Pages) liest die Mod-Liste **live aus
 `config/modpack.json`** (gleiche Origin – kein CDN-Cache-Problem) und zeigt
-Mod-Name, Item-Icon, Version und Bemerkung an.
+Mod-Name, Pixel-Icon, Version und Bemerkung an. Es gibt **keine externen Requests**
+(Fonts/CSS/JS liegen im Repo) – deshalb blockiert auch kein Adblocker etwas.
 
 ## ⚠️ Hinweis
 

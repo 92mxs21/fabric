@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "scriptVersion": "1.1.0",
+  "schemaVersion": 2,
+  "scriptVersion": "1.2.0",
   "minecraftVersion": "1.20.1",
   "loader": "fabric",
   "autoDownloadJava": true,
@@ -8,7 +8,7 @@
     "minecraft": "1.20.1",
     "loader": "0.19.5",
     "installer": "1.1.2",
-    "script": "1.1.0"
+    "script": "1.2.0"
   },
   "mods": [
     {
@@ -17,7 +17,11 @@
       "version": "9.2.14",
       "modrinthVersion": "9.2.14+fabric",
       "icon": "enchanted_book",
-      "bemerkung": "Multi-Loader-API (Fabric/Forge) – wird von vielen Mods mitgenutzt"
+      "bemerkung": "Multi-Loader-API (Fabric/Forge) – wird von vielen Mods mitgenutzt",
+      "file": "architectury-9.2.14-fabric.jar",
+      "size": 585207,
+      "sha1": "4fa65e32dbf63a871a30fe8ec6fbff9a4b8d007d",
+      "url": "https://cdn.modrinth.com/data/lhGA9TYQ/versions/WbL7MStR/architectury-9.2.14-fabric.jar"
     },
     {
       "name": "Cloth Config",
@@ -25,7 +29,11 @@
       "version": "11.1.136",
       "modrinthVersion": "11.1.136+fabric",
       "icon": "experience_bottle",
-      "bemerkung": "Konfigurations-API für Mods mit eigenem Einstellungsmenü"
+      "bemerkung": "Konfigurations-API für Mods mit eigenem Einstellungsmenü",
+      "file": "cloth-config-11.1.136-fabric.jar",
+      "size": 1172214,
+      "sha1": "d5fe84a0cc9ed5c7290a76ba570e1f8716afecab",
+      "url": "https://cdn.modrinth.com/data/9s6osm5g/versions/2xQdCMyG/cloth-config-11.1.136-fabric.jar"
     },
     {
       "name": "Dreamshift",
@@ -33,7 +41,11 @@
       "version": "0.1.4.3.1",
       "modrinthVersion": "0.1.4.3.1-fabric",
       "icon": "golden_apple",
-      "bemerkung": "Spielstand sicher speichern und an einer Basis weiterstarten"
+      "bemerkung": "Spielstand sicher speichern und an einer Basis weiterstarten",
+      "file": "dreamshift-0.1.4.3.1-fabric.jar",
+      "size": 515389357,
+      "sha1": "cdf5d3b6b3cea528ba0164a5962a731a7fde9161",
+      "url": "https://cdn.modrinth.com/data/sdQwPACz/versions/b86Glw4w/dreamshift-0.1.4.3.1-fabric.jar"
     },
     {
       "name": "Fabric API",
@@ -41,7 +53,11 @@
       "version": "0.92.12+1.20.1",
       "modrinthVersion": "0.92.12+1.20.1",
       "icon": "iron_ingot",
-      "bemerkung": "Basis-API – wird von fast allen anderen Mods vorausgesetzt"
+      "bemerkung": "Basis-API – wird von fast allen anderen Mods vorausgesetzt",
+      "file": "fabric-api-0.92.12+1.20.1.jar",
+      "size": 2137232,
+      "sha1": "3e9cdd3e2f827ca9a259df9eb8e31949437b6bd4",
+      "url": "https://cdn.modrinth.com/data/P7dR8mSH/versions/rvI2dfzR/fabric-api-0.92.12%2B1.20.1.jar"
     },
     {
       "name": "Immersive Portals",
@@ -49,7 +65,11 @@
       "version": "5.2.0",
       "modrinthVersion": "5.2.0",
       "icon": "ender_pearl",
-      "bemerkung": "Nahtlose Portale zwischen Dimensionen und Orten"
+      "bemerkung": "Nahtlose Portale zwischen Dimensionen und Orten",
+      "file": "immersive-portals-5.2.0-mc1.20.1-fabric.jar",
+      "size": 2934316,
+      "sha1": "e0327d781901bb6f1caa72dde38846863cf53517",
+      "url": "https://cdn.modrinth.com/data/zJpHMkdD/versions/fSBijwCM/immersive-portals-5.2.0-mc1.20.1-fabric.jar"
     },
     {
       "name": "Sodium",
@@ -57,7 +77,11 @@
       "version": "0.5.13",
       "modrinthVersion": "mc1.20.1-0.5.13-fabric",
       "icon": "diamond",
-      "bemerkung": "Leistungsstarker Renderer – deutlich mehr Bilder pro Sekunde"
+      "bemerkung": "Leistungsstarker Renderer – deutlich mehr Bilder pro Sekunde",
+      "file": "sodium-fabric-0.5.13+mc1.20.1.jar",
+      "size": 971552,
+      "sha1": "bcdbf37d9494e405cba210d7a80ed58e756297b5",
+      "url": "https://cdn.modrinth.com/data/AANobbMI/versions/OihdIimA/sodium-fabric-0.5.13%2Bmc1.20.1.jar"
     },
     {
       "name": "Simple Voice Chat",
@@ -65,7 +89,11 @@
       "version": "2.4.32",
       "modrinthVersion": "fabric-1.20.1-2.4.32",
       "icon": "totem_of_undying",
-      "bemerkung": "Sprachchat direkt im Spiel (Push-to-Talk oder Freisprechen)"
+      "bemerkung": "Sprachchat direkt im Spiel (Push-to-Talk oder Freisprechen)",
+      "file": "voicechat-fabric-1.20.1-2.4.32.jar",
+      "size": 8013525,
+      "sha1": "53a7432e35ec894441d31418c01190e2ebe8933e",
+      "url": "https://cdn.modrinth.com/data/9eGKb6K1/versions/r5GmfR2B/voicechat-fabric-1.20.1-2.4.32.jar"
     }
   ]
 }

@@ -1,19 +1,27 @@
-﻿<#
-================================================================================
-  Minecraft 1.20.1 + Fabric Modpack-Installer (Windows PowerShell)
-================================================================================
+﻿<# ================================================================================
+  Minecraft 1.20.1 + Fabric Modpack-Installer (Windows PowerShell)  v1.2.0
+===============================================================================
   Installiert NUR Minecraft 1.20.1 mit:
    - offiziellem Fabric Installer (CLI, neueste Loader-Version automatisch)
    - exakt versionierten Mods von Modrinth (Architectury, Cloth Config,
      Dreamshift, Fabric API, Immersive Portals, Sodium, Simple Voice Chat)
+     => Datei-URL + SHA1 der Mods sind in config/modpack.json fest gepinnt,
+        dadurch braucht das Script fuer die Mods KEINEN Modrinth-API-Call
+        (schneller, weniger Fehlerquellen).
+
+  WICHTIG ZUM ENCODING:
+   Die Datei MUSS als UTF-8 mit BOM gespeichert sein, sonst werden Umlaute
+   (ä/ö/ü/ß) in aelteren PowerShell-Versionen als Mischmasch angezeigt.
+   Einfach so lassen wie sie ist - weder ANSI noch "UTF-8 ohne BOM" verwenden.
 
   Eigenschaften:
    - Idempotent: Wiederholte Ausführung ist gefahrlos, bereits vorhandene und
      korrekte Dateien werden übersprungen.
    - Vorherige nicht benötigte .jar-Mods werden in einen datierten
      <Zeitstempel>modbackup-Ordner verschoben.
-   - Übersichtliche Fortschrittsausgabe, Fehlerbehandlung mit Retry und
-     SHA1-Verifikation aller Downloads.
+   - Live-Download-Fortschritt: bei WELCHER Mod, wie viel (%), wie schnell
+     (MB/s) und wie lange es noch dauert (Restzeit-Einschätzung).
+   - Fehlerbehandlung mit Retry und SHA1-Verifikation aller Downloads.
    - Funktioniert als lokale Datei ODER per Einzeiler:
        powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main/install.ps1 | iex"
 
@@ -29,8 +37,7 @@
                             neben dem Script bzw. Remote aus dem Repo)
    -DryRun                  Nur prüfen und anzeigen, nichts installieren
    -Force                   Installiert auch bereits vorhandene Dateien neu
-================================================================================
-#>
+================================================================================ #>
 
 #requires -Version 5.1
 [CmdletBinding()]
@@ -48,8 +55,8 @@ $script:RawBase        = 'https://raw.githubusercontent.com/92mxs21/fabric-1.20.
 $script:FabricMetaBase = 'https://meta.fabricmc.net/v2'
 $script:FabricMaven    = 'https://maven.fabricmc.net'
 $script:ModrinthApi    = 'https://api.modrinth.com/v2'
-$script:UserAgent      = 'Install-PS1/1.1.0 (Fabric 1.20.1 Modpack; +https://github.com/92mxs21/fabric-1.20.1-modpack)'
-$script:ScriptVersion  = '1.1.0'
+$script:UserAgent      = 'Install-PS1/1.2.0 (Fabric 1.20.1 Modpack; +https://github.com/92mxs21/fabric-1.20.1-modpack)'
+$script:ScriptVersion  = '1.2.0'
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference    = 'SilentlyContinue'
@@ -81,6 +88,13 @@ function Set-ScriptExit([int]$Code) {
     if ($PSCommandPath -and -not $script:InvocationLine) { exit $Code }
 }
 
+# Restzeit formatiert anzeigen ("4 s" oder "1,3 min")
+function Format-Eta([double]$Seconds) {
+    if ($Seconds -lt 0 -or [double]::IsNaN($Seconds) -or [double]::IsInfinity($Seconds)) { return '?' }
+    if ($Seconds -ge 60) { return ([math]::Round($Seconds / 60, 1)).ToString('0.0') + ' min' }
+    return ([math]::Max(0, [math]::Ceiling($Seconds))).ToString() + ' s'
+}
+
 #------------------------------------------------------------------------------
 # Netzwerk-Helfer
 #------------------------------------------------------------------------------
@@ -110,62 +124,65 @@ function Invoke-FileDownload {
         [string]$OutFile,
         [string]$Label,
         [int64]$ExpectedSize = 0,
-        [int]$Retries = 3
+        [int]$Retries = 3,
+        [string]$StatusPrefix = ''    # z. B. "[3/7]"
     )
     for ($i = 1; $i -le $Retries; $i++) {
         try {
             if ((Test-Path $OutFile) -and (Get-Item $OutFile).Length -gt 0) { Remove-Item $OutFile -Force }
             $wc = New-Object System.Net.WebClient
             $wc.DownloadFileAsync([Uri]$Url, $OutFile)
-            # Echter Download-Prozess: im Haupt-Thread pollen und prozentualen
-            # Fortschritt samt MB und MB/s anzeigen (kein Event-Handler: der liefe
-            # auf einem Thread ohne Runspace und würde in PowerShell abstürzen)
-            $lastPct    = -1
+            # Echter Download-Prozess: im Haupt-Thread pollen (kein Event-Handler,
+            # der liefe auf einem Thread ohne Runspace und würde abstürzen).
+            # Zeigt: welche Mod, %, MB/MB, MB/s und geschätzte Restzeit.
+            $lastPct    = [int]-1
             $lastBytes  = [int64]0
             $lastTick   = [Environment]::TickCount
             $speed      = 0.0
             $hadOutput  = $false
-            $firstBytes = $false
+            $unknownShown = $false
             while ($wc.IsBusy) {
-                Start-Sleep -Milliseconds 300
+                Start-Sleep -Milliseconds 200
                 if (-not (Test-Path $OutFile)) { continue }
-                $cur  = [int64](Get-Item $OutFile).Length
-                $now  = [Environment]::TickCount
-                $dt   = $now - $lastTick
-                if ($dt -ge 600) {
+                $cur = [int64](Get-Item $OutFile).Length
+                $now = [Environment]::TickCount
+                $dt  = $now - $lastTick
+                if ($dt -ge 500) {
                     if ($dt -gt 0) {
-                        $speed = [math]::Round((($cur - $lastBytes) * 1000.0) / $dt / 1MB, 2)
+                        $instant = (($cur - $lastBytes) * 1000.0) / $dt / 1MB
+                        # gleitender Mittelwert gegen Ruckeln in der Anzeige
+                        if ($speed -eq 0) { $speed = $instant } else { $speed = (0.75 * $speed) + (0.25 * $instant) }
+                        if ($speed -lt 0) { $speed = 0 }
                     }
                     $lastTick  = $now
                     $lastBytes = $cur
                     $hadOutput = $true
                     if ($ExpectedSize -gt 0) {
-                        $pct = [math]::Min(99, [math]::Floor(($cur * 100) / $ExpectedSize))
+                        # Bekannte Größe: welche Mod, %, MB/MB, MB/s, geschätzte Restzeit
+                        $pct = [int][math]::Floor(($cur * 100.0) / $ExpectedSize)
                         if ($pct -ne $lastPct) {
                             $lastPct = $pct
-                            Write-Host ("`r      {0,-22} {1,3} %  ({2,7:N1} / {3,7:N1} MB, {4,6:N1} MB/s)" -f $Label, $pct, ($cur / 1MB), ($ExpectedSize / 1MB), $speed) -NoNewline
+                            $eta = '?'
+                            if ($speed -gt 0.001) { $eta = Format-Eta (($ExpectedSize - $cur) / 1MB / $speed) }
+                            Write-Host ("`r      {0,-7} {1,-24} {2,3} %   {3,6:N1} / {4,6:N1} MB   {5,6:N1} MB/s   noch ~{6}      " -f $StatusPrefix, $Label, $pct, ($cur / 1MB), ($ExpectedSize / 1MB), $speed, $eta) -NoNewline
                         }
                     } else {
-                        # Größe unbekannt (z. B. Temurin-JRE zum Download vorbereiten):
-                        # nur geladene MB anzeigen, sobald überhaupt Bytes fließen
-                        if (-not $firstBytes -and $cur -gt 0) {
-                            $firstBytes = $true
-                            Write-Info "Starte Download: $Label -> $OutFile"
-                        }
-                        Write-Host ("`r      {0,-22} {1,7:N1} MB geladen, {2,6:N1} MB/s" -f $Label, ($cur / 1MB), $speed) -NoNewline
+                        # Unbekannte Größe (z. B. Temurin-JRE): nur geladene MB + Tempo
+                        $unknownShown = $true
+                        Write-Host ("`r      {0,-7} {1,-24} {2,7:N1} MB geladen   {3,6:N1} MB/s   läuft ...      " -f $StatusPrefix, $Label, ($cur / 1MB), $speed) -NoNewline
                     }
                 }
             }
             $wc.Dispose()
             if ($hadOutput) { Write-Host ' ' }
-            if (-not ($hadOutput -or $firstBytes)) { Write-Info "Starte Download: $Label -> $OutFile" }
+            if (-not ($hadOutput -or $unknownShown)) { Write-Info "Starte Download: $Label -> $OutFile" }
             if (-not (Test-Path $OutFile)) { throw 'Datei wurde nicht erstellt.' }
             $finalSize = (Get-Item $OutFile).Length
             if ($finalSize -le 0) { throw 'Datei ist leer.' }
             if ($ExpectedSize -gt 0 -and $finalSize -ne $ExpectedSize) {
                 throw "Größe unerwartet (erwartet: $ExpectedSize, erhalten: $finalSize)."
             }
-            Write-Ok "$Label heruntergeladen ($([math]::Round($finalSize / 1MB, 1)) MB)."
+            Write-Ok "$StatusPrefix $Label heruntergeladen ($([math]::Round($finalSize / 1MB, 1)) MB, SHA1-Check folgt)."
             return
         } catch {
             Write-Host ''
@@ -206,14 +223,20 @@ function Get-JavaMajor {
 }
 
 function Find-Java {
+    # Reihenfolge = Geschwindigkeit: PATH und JAVA_HOME zuerst (da fast immer ein
+    # Java dort hängt), die riesigen Programmordner-Allgemein suchen ist langsam.
     $cands = @()
     $cmd = Get-Command java -ErrorAction SilentlyContinue
     if ($cmd) { $cands += $cmd.Source }
     if ($env:JAVA_HOME) { $cands += (Join-Path $env:JAVA_HOME 'bin\java.exe') }
-    # Tiefensuche begrenzen (-Depth), damit riesige Ordnertrees (z. B. Program Files\Microsoft) nicht abgesucht werden
-    $cands += @(Get-ChildItem 'C:\Program Files\Eclipse Adoptium' -Filter java.exe -Recurse -Depth 4 -ErrorAction SilentlyContinue | ForEach-Object FullName)
-    $cands += @(Get-ChildItem 'C:\Program Files\Java' -Filter java.exe -Recurse -Depth 4 -ErrorAction SilentlyContinue | ForEach-Object FullName)
-    $cands += @(Get-ChildItem 'C:\Program Files\Microsoft' -Filter java.exe -Recurse -Depth 4 -ErrorAction SilentlyContinue | ForEach-Object FullName)
+    # nur Java-bezogene Unterordner von Program Files durchsuchen (schnell)
+    $pf = @($env:ProgramFiles, ${env:ProgramFiles(x86)}) | Where-Object { $_ }
+    foreach ($p in $pf) {
+        $javaDirs = @(Get-ChildItem $p -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'Java|Adoptium|Temurin|Zulu|Microsoft|Eclipse' })
+        foreach ($d in $javaDirs) {
+            $cands += @(Get-ChildItem $d.FullName -Filter java.exe -Recurse -Depth 4 -ErrorAction SilentlyContinue | ForEach-Object FullName)
+        }
+    }
     $cands += @(Get-ChildItem (Join-Path $env:LOCALAPPDATA 'fabric-modpack-jre') -Filter java.exe -Recurse -Depth 4 -ErrorAction SilentlyContinue | ForEach-Object FullName)
     foreach ($c in @($cands | Select-Object -Unique)) {
         if ($c -and (Test-Path $c)) {
@@ -228,7 +251,6 @@ function Install-TemurinJre {
     $tools = Join-Path $env:LOCALAPPDATA 'fabric-modpack-jre'
     New-Item -ItemType Directory -Path $tools -Force | Out-Null
     $zip = Join-Path $tools 'jre17.zip'
-    $exe = $null
     Write-Info 'Lade Temurin JRE 17 herunter (für den Fabric Installer) ...'
     Invoke-FileDownload -Url 'https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jre/hotspot/normal/eclipse' -OutFile $zip -Label 'Temurin JRE 17'
     Write-Info 'Entpacke JRE ...'
@@ -240,19 +262,44 @@ function Install-TemurinJre {
 }
 
 #------------------------------------------------------------------------------
-# Fabric (Loader-Versionen + Installer)
+# Fabric (Loader-Versionen + Installer) - mit 6-Stunden-Cache
 #------------------------------------------------------------------------------
 function Get-FabricVersions {
     param([string]$McVer)
-    $loaders = @(Invoke-GetJson "$script:FabricMetaBase/versions/loader/$McVer")
-    if ($loaders.Count -eq 0) { throw "Keine Fabric-Loader-Versionen für $McVer verfügbar." }
-    $stable = $loaders | Where-Object { $_.loader.stable -eq $true } | Select-Object -First 1
-    if (-not $stable) { $stable = $loaders | Select-Object -First 1 }
-    $installers = @(Invoke-GetJson "$script:FabricMetaBase/versions/installer")
-    if ($installers.Count -eq 0) { throw 'Keine Fabric-Installer-Version verfügbar.' }
+    $toolsDir = Join-Path $env:LOCALAPPDATA 'fabric-modpack-tools'
+    New-Item -ItemType Directory -Path $toolsDir -Force | Out-Null
+    $cacheFile = Join-Path $toolsDir 'fabric-meta-cache.json'
+    $cache = $null
+    if (Test-Path $cacheFile) {
+        try {
+            $cache = Get-Content $cacheFile -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ($cache.mc -ne $McVer) { $cache = $null }
+            else {
+                $age = (Get-Date) - [datetime]::Parse($cache.fetched)
+                if ($age.TotalHours -gt 6) { $cache = $null }
+            }
+        } catch { $cache = $null }
+    }
+    if (-not $cache) {
+        $loaders = @(Invoke-GetJson "$script:FabricMetaBase/versions/loader/$McVer")
+        if ($loaders.Count -eq 0) { throw "Keine Fabric-Loader-Versionen für $McVer verfügbar." }
+        $stable = $loaders | Where-Object { $_.loader.stable -eq $true } | Select-Object -First 1
+        if (-not $stable) { $stable = $loaders | Select-Object -First 1 }
+        $installers = @(Invoke-GetJson "$script:FabricMetaBase/versions/installer")
+        if ($installers.Count -eq 0) { throw 'Keine Fabric-Installer-Version verfügbar.' }
+        $cache = [pscustomobject]@{
+            fetched   = (Get-Date).ToString('o')
+            mc        = $McVer
+            loader    = $stable.loader.version
+            installer = $installers[0].version
+        }
+        if (-not $script:DryRun) {
+            try { $cache | ConvertTo-Json -Depth 3 | Set-Content -Path $cacheFile -Encoding UTF8 } catch {}
+        }
+    }
     return [pscustomobject]@{
-        LoaderVersion    = $stable.loader.version
-        InstallerVersion = $installers[0].version
+        LoaderVersion    = $cache.loader
+        InstallerVersion = $cache.installer
     }
 }
 
@@ -285,13 +332,18 @@ function Invoke-FabricInstaller {
 }
 
 #------------------------------------------------------------------------------
-# Modrinth
+# Modrinth (NUR als Fallback, wenn in der Config keine Datei-URL gepinnt ist)
 #------------------------------------------------------------------------------
 function Resolve-ModrinthMod {
     param($Mod)
     $mcVer = $script:Config.minecraftVersion
-    $query = '?game_versions=' + [uri]::EscapeDataString("`"[$mcVer]`"") + '&loaders=' + [uri]::EscapeDataString('["fabric"]')
+    # Filter korrekt kodieren: game_versions=["1.20.1"]&loaders=["fabric"]
+    $gv = '["' + $mcVer + '"]'
+    $ld = '["fabric"]'
+    $query = '?game_versions=' + [uri]::EscapeDataString($gv) + '&loaders=' + [uri]::EscapeDataString($ld)
     $versions = @(Invoke-GetJson "$script:ModrinthApi/project/$($Mod.slug)/version$query")
+    # verschachtelte Antworten eine Ebene flachklopfen
+    if ($versions.Count -eq 1 -and $versions[0] -is [System.Array]) { $versions = @($versions[0]) }
 
     $wantExact = if ($Mod.modrinthVersion) { [string]$Mod.modrinthVersion } else { [string]$Mod.version }
     $v = $versions | Where-Object { $_.version_number -eq $wantExact } | Select-Object -First 1
@@ -319,16 +371,13 @@ function Resolve-ModrinthMod {
         throw "Primär-Datei von Mod '$($Mod.slug)' ist keine .jar-Datei (Fabric/$mcVer)."
     }
     return [pscustomobject]@{
-        Name             = $Mod.name
-        Slug             = $Mod.slug
-        RequestedVersion = [string]$Mod.version
-        VersionNumber    = $v.version_number
-        FileName         = $file.filename
-        Url              = $file.url
-        Size             = [int64]$file.size
-        Sha1             = $file.hashes.sha1
-        GameVersions     = ($v.game_versions -join ', ')
-        Loaders          = ($v.loaders -join ', ')
+        Name        = $Mod.name
+        Slug        = $Mod.slug
+        FileName    = $file.filename
+        Url         = $file.url
+        Size        = [int64]$file.size
+        Sha1        = [string]$file.hashes.sha1
+        FromConfig  = $false
     }
 }
 
@@ -338,7 +387,7 @@ function Get-Sha1 {
 }
 
 #------------------------------------------------------------------------------
-# Backup nicht benötigter Mods -> datierter mods-backup-Ordner
+# Backup nicht benötigter Mods -> datierter <Zeitstempel>modbackup-Ordner
 #------------------------------------------------------------------------------
 function New-ModsBackup {
     param([string]$ModsDir, [string[]]$KeepFileNames)
@@ -348,7 +397,6 @@ function New-ModsBackup {
         return $null
     }
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-    # Datierter Backup-Ordner direkt neben "mods": <Zeitstempel>modbackup
     $dest = Join-Path (Split-Path $ModsDir -Parent) ($stamp + 'modbackup')
     Write-Info "Verschiebe $($toMove.Count) nicht benötigte .jar-Mod(s) nach:"
     Write-Info $dest
@@ -484,29 +532,42 @@ try {
         Write-Ok "Fabric Profil 'fabric-loader-$loaderVer-$mcVer' ist bereits aktuell installiert."
     } else {
         if ($installedLoader) { Write-Warn "Vorhandener Loader: $installedLoader -> aktualisiere auf $loaderVer" }
-        # Fabric Installer braucht eine erkannte Launcher-Profile-Datei
         Ensure-LauncherProfiles -McDir $mcDir
         Invoke-FabricInstaller -InstallerJar $installerJar -JavaPath $java.Path -McDir $mcDir -McVer $mcVer -LoaderVer $loaderVer
         if ($script:DryRun) { Write-Info "DryRun: Fabric-Profil 'fabric-loader-$loaderVer-$mcVer' würde installiert." }
         else { Write-Ok "Fabric Profil 'fabric-loader-$loaderVer-$mcVer' installiert." }
     }
 
-    # --------------------------------------------------- 7) Modrinth-Metadaten
-    Write-StepTitle 'Schritt 7/10: Mod-Informationen von Modrinth abrufen'
+    # --------------------------------------------------- 7) Mod-Dateien bestimmen
+    Write-StepTitle 'Schritt 7/10: Mod-Dateien bestimmen'
     $resolvedMods = @()
+    $usedApi = $false
     $modCount = $script:Config.mods.Count
     $mi = 0
     foreach ($m in $script:Config.mods) {
         $mi++
-        try {
+        $pinned = [bool]($m.url -and $m.sha1 -and $m.file)
+        if ($pinned) {
+            $resolvedMods += [pscustomobject]@{
+                Name       = [string]$m.name
+                Slug       = [string]$m.slug
+                FileName   = [string]$m.file
+                Url        = [string]$m.url
+                Size       = [int64]$m.size
+                Sha1       = ([string]$m.sha1).ToLowerInvariant()
+                FromConfig = $true
+            }
+            Write-Ok "($mi/$modCount) $($m.name) gepinnt [$($m.file), $([math]::Round([int64]$m.size / 1MB, 1)) MB]"
+        } else {
+            $usedApi = $true
+            Write-Info "($mi/$modCount) $($m.name): keine gepinnte Datei in der Config - frage Modrinth-API ab ..."
             $resolved = Resolve-ModrinthMod -Mod $m
-            $mb = [math]::Round($resolved.Size / 1MB, 1)
-            Write-Ok "($mi/$modCount) $($resolved.Name) $($resolved.RequestedVersion) -> $($resolved.VersionNumber) [$($resolved.FileName), $mb MB]"
             $resolvedMods += $resolved
-        } catch {
-            throw "Mod '$($m.name)' ($($m.slug)): $($_.Exception.Message)"
+            Write-Ok "($mi/$modCount) $($m.name) -> $($resolved.FileName), $([math]::Round($resolved.Size / 1MB, 1)) MB"
         }
     }
+    if ($usedApi) { Write-Warn 'Hinweis: Einige Mods wurden per Modrinth-API aufgelöst (Config ohne file/sha1/url).' }
+    else          { Write-Ok 'Alle Mods kommen aus der Config - keine Modrinth-API-Calls nötig.' }
     $targetFileNames = @($resolvedMods | ForEach-Object FileName)
 
     # ----------------------------------------------------------- 8) Backup
@@ -516,30 +577,59 @@ try {
     # ------------------------------------------------------ 9) Mods herunterladen
     Write-StepTitle 'Schritt 9/10: Mods herunterladen und verifizieren'
     if ($resolvedMods.Count -eq 0) { throw 'Keine Mods in der Konfiguration vorhanden.' }
-    $di = 0
+    $toDownload = @()
     foreach ($r in $resolvedMods) {
-        $di++
         $dest = Join-Path $modsDir $r.FileName
         if ((Test-Path $dest) -and (-not $script:Force)) {
             $existingHash = Get-Sha1 $dest
-            if ($existingHash -eq $r.Sha1.ToLowerInvariant()) {
-                Write-Ok "($di/$($resolvedMods.Count)) $($r.Name) ist bereits korrekt installiert."
+            if ($existingHash -eq $r.Sha1) {
+                Write-Ok "($($r.Name)) ist bereits korrekt installiert."
                 continue
             }
-            Write-Warn "($di/$($resolvedMods.Count)) $($r.Name): vorhandene Datei ungültig - lade neu."
+            Write-Warn "($($r.Name)): vorhandene Datei ungültig - lade neu."
             Remove-Item $dest -Force
         }
         if ($script:DryRun) {
             Write-Info "DryRun: Download übersprungen -> $($r.FileName)"
             continue
         }
-        Invoke-FileDownload -Url $r.Url -OutFile $dest -Label $r.Name -ExpectedSize $r.Size
+        $toDownload += $r
+    }
+    $dlTotal = ($toDownload | Measure-Object -Property Size -Sum).Sum
+    $dlDone  = [int64]0
+    $dlIndex = 0
+    if ($dlTotal -gt 0 -and $toDownload.Count -gt 0) {
+        Write-Info ("Noch zu laden: {0} Mod(s), gesamt {1:N1} MB." -f $toDownload.Count, ($dlTotal / 1MB))
+    }
+    foreach ($r in $toDownload) {
+        $dlIndex++
+        $dest = Join-Path $modsDir $r.FileName
+        Invoke-FileDownload -Url $r.Url -OutFile $dest -Label $r.Name -ExpectedSize $r.Size -StatusPrefix ("[{0}/{1}]" -f $dlIndex, $toDownload.Count)
         $hash = Get-Sha1 $dest
-        if ($hash -ne $r.Sha1.ToLowerInvariant()) {
+        if ($hash -eq $r.Sha1) {
+            $dlDone += $r.Size
+        } elseif ($r.FromConfig) {
+            # Gepinnte URL evtl. veraltet -> einmal über die API neu auflösen
+            Write-Warn "$($r.Name): SHA1-Check fehlgeschlagen (gepinnter Eintrag, erwartet: $($r.Sha1)). Frage Modrinth-API neu ab ..."
+            Remove-Item $dest -Force -ErrorAction SilentlyContinue
+            $apiMod = $script:Config.mods | Where-Object { $_.slug -eq $r.Slug } | Select-Object -First 1
+            $fresh = Resolve-ModrinthMod -Mod $apiMod
+            Invoke-FileDownload -Url $fresh.Url -OutFile $dest -Label $r.Name -ExpectedSize $fresh.Size -StatusPrefix ("[{0}/{1}]" -f $dlIndex, $toDownload.Count)
+            $hash = Get-Sha1 $dest
+            if ($hash -ne $fresh.Sha1.ToLowerInvariant()) {
+                Remove-Item $dest -Force -ErrorAction SilentlyContinue
+                throw "SHA1-Prüfung fehlgeschlagen für $($r.FileName) (API: erwartet $($fresh.Sha1)). Modrinth-Datei hat sich geändert - Config aktualisieren."
+            }
+            $dlDone += $r.Size
+        } else {
             Remove-Item $dest -Force -ErrorAction SilentlyContinue
             throw "SHA1-Prüfung fehlgeschlagen für $($r.FileName) (erwartet: $($r.Sha1))."
         }
-        Write-Ok "($di/$($resolvedMods.Count)) $($r.Name) installiert und verifiziert."
+        Write-Ok "($dlIndex/$($toDownload.Count)) $($r.Name) installiert und verifiziert."
+        if ($dlTotal -gt 0) {
+            $gp = [math]::Round($dlDone * 100.0 / $dlTotal, 1)
+            Write-Info ("Gesamt: {0}/{1} Mods | {2:N1} / {3:N1} MB ({4} % geladen)" -f $dlIndex, $toDownload.Count, ($dlDone / 1MB), ($dlTotal / 1MB), $gp)
+        }
     }
 
     # ------------------------------------------------------------- 10) Fertig

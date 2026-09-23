@@ -3,362 +3,270 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fabric 1.20.1 Modpack – dein Client, aber besser</title>
+<title>Fabric 1.20.1 Modpack – Minecraft, aber besser</title>
+<meta name="description" content="Ein Befehl kopieren, einfügen, Enter: Minecraft 1.20.1 + Fabric + 7 ausgewählte Mods installieren. Gepinnt, geprüft, ohne Schnickschnack.">
 <link rel="icon" href="assets/mc/pack.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- ======== Kopfzeile ======== -->
+<a class="skip" href="#mods">Direkt zu den Mods</a>
+
 <header class="bar">
-  <div class="bar-in">
+  <div class="wrap bar-in">
     <a class="brand" href="#top">
       <img src="assets/mc/pack.png" alt="" class="pix">
-      <span>FABRIC 1.20.1 MODPACK</span>
+      <span class="brand-name">FABRIC 1.20.1</span>
     </a>
-    <div class="bar-right">
-      <span class="stat" title="Alles in einer Konfiguration">7 MODS</span>
-      <span class="stat" title="Kein Forge, kein Quatsch">100% FABRIC</span>
-      <span class="stat gold" id="chipScript">v1.1.0</span>
+    <div class="chips">
+      <span class="chip">7 MODS</span>
+      <span class="chip chip-gold" id="chipScript">v…</span>
     </div>
   </div>
 </header>
 
-<!-- ======== Hero: Mini-Minecraft-Landschaft ======== -->
-<section class="hero" id="top">
-  <button id="daynight" class="sun-btn" type="button" aria-label="Tag/Nacht umschalten">
-    <svg viewBox="0 0 24 24" id="icoSun"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
-    <svg viewBox="0 0 24 24" id="icoMoon"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5z"/></svg>
-  </button>
-  <div class="stars" aria-hidden="true"></div>
-  <div class="moon" aria-hidden="true"></div>
-  <div class="sun" aria-hidden="true"></div>
-  <div class="cloud c1" aria-hidden="true"></div>
-  <div class="cloud c2" aria-hidden="true"></div>
-  <div class="cloud c3" aria-hidden="true"></div>
+<main id="top">
 
-  <img class="fb f1" src="assets/mc/grass_block_side.png" alt="">
-  <img class="fb f2" src="assets/mc/diamond_block.png" alt="">
-  <img class="fb f3" src="assets/mc/tnt_side.png" alt="">
-  <img class="fb f4" src="assets/mc/gold_block.png" alt="">
-  <img class="fb f5" src="assets/mc/bedrock.png" alt="">
+  <!-- ================= Hero ================= -->
+  <section class="hero">
+    <div class="wrap">
+      <h1>Minecraft 1.20.1 + <span class="accent">Fabric</span>.<br>Fertig.</h1>
+      <p class="lead">Ein Befehl kopieren, einfügen, Enter.<br>Dann sind Java, das Fabric-Profil und 7 Mods installiert. Sonst nichts.</p>
 
-  <div class="hero-in">
-    <h1>MINECRAFT <span class="y">1.20.1</span><br>+ FABRIC</h1>
-    <p class="tag">Dein Client, aber halt besser. 7 Mods, alle fest gepinnt auf
-       1.20.1 + Fabric. Kopieren, einfügen, fertig – mehr musst du nicht können.</p>
-    <div class="facts" id="facts"></div>
-  </div>
-  <div class="h-grass" aria-hidden="true"></div>
-  <div class="h-dirt" aria-hidden="true"></div>
-</section>
-
-<!-- ======== Block-Marquee ======== -->
-<div class="marquee-wrap" aria-hidden="true">
-  <div class="marquee">
-    <div class="mq-track">
-      <img class="mq-ico" src="assets/mc/grass_block_top.png" alt=""><img class="mq-ico" src="assets/mc/dirt.png" alt=""><img class="mq-ico" src="assets/mc/oak_planks.png" alt=""><img class="mq-ico" src="assets/mc/stone_bricks.png" alt=""><img class="mq-ico" src="assets/mc/cobblestone.png" alt=""><img class="mq-ico" src="assets/mc/stone.png" alt=""><img class="mq-ico" src="assets/mc/diamond_block.png" alt=""><img class="mq-ico" src="assets/mc/emerald_block.png" alt=""><img class="mq-ico" src="assets/mc/gold_block.png" alt=""><img class="mq-ico" src="assets/mc/iron_block.png" alt=""><img class="mq-ico" src="assets/mc/netherite_block.png" alt=""><img class="mq-ico" src="assets/mc/coal_block.png" alt=""><img class="mq-ico" src="assets/mc/bricks.png" alt=""><img class="mq-ico" src="assets/mc/obsidian.png" alt=""><img class="mq-ico" src="assets/mc/bedrock.png" alt=""><img class="mq-ico" src="assets/mc/deepslate.png" alt=""><img class="mq-ico" src="assets/mc/oak_log.png" alt=""><img class="mq-ico" src="assets/mc/crafting_table_top.png" alt=""><img class="mq-ico" src="assets/mc/glowstone.png" alt=""><img class="mq-ico" src="assets/mc/amethyst_block.png" alt=""><img class="mq-ico" src="assets/mc/copper_block.png" alt=""><img class="mq-ico" src="assets/mc/tnt_side.png" alt=""><img class="mq-ico" src="assets/mc/blackstone.png" alt=""><img class="mq-ico" src="assets/mc/mossy_cobblestone.png" alt="">
-      <img class="mq-ico" src="assets/mc/grass_block_top.png" alt=""><img class="mq-ico" src="assets/mc/dirt.png" alt=""><img class="mq-ico" src="assets/mc/oak_planks.png" alt=""><img class="mq-ico" src="assets/mc/stone_bricks.png" alt=""><img class="mq-ico" src="assets/mc/cobblestone.png" alt=""><img class="mq-ico" src="assets/mc/stone.png" alt=""><img class="mq-ico" src="assets/mc/diamond_block.png" alt=""><img class="mq-ico" src="assets/mc/emerald_block.png" alt=""><img class="mq-ico" src="assets/mc/gold_block.png" alt=""><img class="mq-ico" src="assets/mc/iron_block.png" alt=""><img class="mq-ico" src="assets/mc/netherite_block.png" alt=""><img class="mq-ico" src="assets/mc/coal_block.png" alt=""><img class="mq-ico" src="assets/mc/bricks.png" alt=""><img class="mq-ico" src="assets/mc/obsidian.png" alt=""><img class="mq-ico" src="assets/mc/bedrock.png" alt=""><img class="mq-ico" src="assets/mc/deepslate.png" alt=""><img class="mq-ico" src="assets/mc/oak_log.png" alt=""><img class="mq-ico" src="assets/mc/crafting_table_top.png" alt=""><img class="mq-ico" src="assets/mc/glowstone.png" alt=""><img class="mq-ico" src="assets/mc/amethyst_block.png" alt=""><img class="mq-ico" src="assets/mc/copper_block.png" alt=""><img class="mq-ico" src="assets/mc/tnt_side.png" alt=""><img class="mq-ico" src="assets/mc/blackstone.png" alt=""><img class="mq-ico" src="assets/mc/mossy_cobblestone.png" alt="">
-    </div>
-  </div>
-</div>
-
-<main class="wrap">
-
-  <!-- ======== Installation ======== -->
-  <section class="mc-panel install">
-    <div class="mc-in">
-      <div class="card-head">
-        <img src="assets/mc/crafting_table_front.png" alt="" class="head-ico pix">
-        <h2>Die Installation <span class="yel">(copy-paste &amp; gut is)</span></h2>
+      <div class="cmd-card">
+        <label class="cmd-label" for="cmdinput">DER BEFEHL</label>
+        <div class="cmd-row">
+          <input id="cmdinput" class="cmd" readonly
+                 value="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;irm https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main/install.ps1 | iex&quot;"
+                 aria-label="Installationsbefehl für Windows PowerShell">
+          <button type="button" class="btn-copy" id="copybtn" onclick="window.__doCopy && window.__doCopy()">KOPIEREN</button>
+        </div>
+        <p class="cmd-hint">PowerShell öffnen, einfügen, Enter. Das Script erklärt sich dann selbst.</p>
       </div>
-      <p class="lead">Da kommt gleich das ganze Programm: Java-Check, Fabric-Profil von
-         <a href="https://fabricmc.net" target="_blank" rel="noopener noreferrer">FabricMC</a>,
-         dann alle Mods von <a href="https://modrinth.com" target="_blank" rel="noopener noreferrer">Modrinth</a>.
-         Du musst nur hinschauen.</p>
-      <div class="cmd">
-        <div class="cmd-top">
-          <span class="dotf"></span><span class="dotf"></span><span class="dotf"></span>
-          <span class="cmd-title">PowerShell</span>
-        </div>
-        <div class="cmd-body">
-          <code id="oneline"><span class="cur">▌</span></code>
-        </div>
-        <div class="cmd-foot">
-          <span class="hint">Einfach kopieren, in PowerShell einfügen, Enter. That's it.</span>
-          <button id="copyBtn" class="mc-btn green" type="button">
-            <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="1"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            <span id="copyLabel">kopieren</span>
-          </button>
-        </div>
-      </div>
-      <p class="small">Das Script checkt außerdem jeden Download (Größe + SHA1) und wirft
-         fremde alte Mods in einen Backup-Ordner: <code>&lt;Zeitstempel&gt;modbackup</code>.
-         Also: nix geht verloren.</p>
+
+      <ul class="facts">
+        <li><b>7</b> Mods, alle von Modrinth</li>
+        <li><b>1.20.1</b> nur mit Fabric</li>
+        <li><b>Backup</b> deiner alten Mods</li>
+        <li><b>SHA1</b>-geprüft, jede Datei</li>
+      </ul>
     </div>
+    <div class="grass" aria-hidden="true"></div>
   </section>
 
-  <!-- ======== Mods ======== -->
-  <section class="mc-panel mods" id="mods">
-    <div class="mc-in">
-      <div class="card-head">
-        <img src="assets/mc/pack.png" alt="" class="head-ico pix">
-        <h2>Dein Mod-Loadout <span class="yel">(7 Stück, kein Risiko)</span></h2>
-      </div>
-      <p class="lead">Keine random Versionen, kein Kram aus "irgendwo". Genau diese 7 sind für
-         1.20.1 + Fabric verifiziert und fest gepinnt.</p>
-      <p class="loadstatus" id="modStatus">Lade aus modpack.json …</p>
-      <div class="t-wrap">
-        <table>
+  <!-- ================= Mods ================= -->
+  <section class="sec" id="mods">
+    <div class="wrap">
+      <h2 class="sec-title">Die 7 Mods</h2>
+      <p class="sec-sub">Live aus <code>config/modpack.json</code>, exakt versioniert.</p>
+      <div class="table-wrap">
+        <table class="modtable">
           <thead>
-            <tr><th>Mod</th><th>Version</th><th>Was es kann</th></tr>
+            <tr><th>Mod</th><th>Version</th><th>Was sie kann</th></tr>
           </thead>
-          <tbody id="modRows">
-            <tr><td colspan="3" class="placeholder">…</td></tr>
+          <tbody id="modrows">
+            <tr class="msg-row"><td colspan="3">Lädt Mods …</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="small">Funfact: Dreamshift ist 491 MB. Ja, wirklich. Kein Bug, das Ding hat halt
-         so viele Dimensionen. Wird einmal gezogen, danach ist Ruhe.</p>
     </div>
   </section>
 
-  <!-- ======== 3 Schritte + Fakt ======== -->
-  <div class="split">
-    <section class="mc-panel">
-      <div class="mc-in">
-        <div class="card-head">
-          <img src="assets/mc/oak_planks.png" alt="" class="head-ico pix">
-          <h2>So läuft das</h2>
-        </div>
-        <ol class="steps">
-          <li>
-            <span class="num">1</span>
-            <div><b>Einzeiler kopieren.</b> Da oben. Ein Klick. Mehrmals machst du das eh.</div>
-          </li>
-          <li>
-            <span class="num">2</span>
-            <div><b>Ausführen.</b> In PowerShell einfügen, Enter. Das Script macht den Rest:
-               Java-Check, Fabric-Profil, Mods. Du chillst.</div>
-          </li>
-          <li>
-            <span class="num">3</span>
-            <div><b>Zocken los.</b> Im offiziellen Launcher das Profil
-               <code>fabric-loader-0.19.5-1.20.1</code> picken. Die Vanilla-Dateien zieht er
-               beim ersten Start selber.</div>
-          </li>
-        </ol>
-      </div>
-    </section>
+  <!-- ================= So geht's ================= -->
+  <section class="sec sec-alt" id="how">
+    <div class="wrap">
+      <h2 class="sec-title">So geht’s</h2>
+      <ol class="steps">
+        <li data-n="1">Befehl oben kopieren</li>
+        <li data-n="2">PowerShell öffnen, einfügen, Enter</li>
+        <li data-n="3">Launcher starten → Profil <code>fabric-loader-…</code> → spielen</li>
+      </ol>
+    </div>
+  </section>
 
-    <section class="mc-panel">
-      <div class="mc-in">
-        <div class="card-head">
-          <img src="assets/mc/emerald_block.png" alt="" class="head-ico pix">
-          <h2>Warum das safe ist</h2>
-        </div>
-        <ul class="facts-list">
-          <li>Nochmal laufen lassen? <b>Idempotent</b> – es checkt kurz, überspringt korrekte
-              Dateien und fertig. Nix bricht.</li>
-          <li>Deine alten Mods landen in <code>&lt;Zeitstempel&gt;modbackup</code>, nicht im
-              Nirvana. Zurückholen easy.</li>
-          <li>Kein Java auf dem PC? Das Script holt sich Temurin JRE 17. Kein Stress.</li>
-          <li>Jeder Download wird auf Größe <b>und</b> SHA1 geprüft. Keine kaputte Datei kommt
-              durch.</li>
-        </ul>
-      </div>
-    </section>
-  </div>
+  <!-- ================= Warum safe ================= -->
+  <section class="sec" id="safe">
+    <div class="wrap">
+      <h2 class="sec-title">Warum ist das safe?</h2>
+      <p class="sec-sub">Weil:</p>
+      <ul class="safe-list">
+        <li>nur diese 7 Mods kommen auf deinen PC – kein „4800-Mods-XXL-Paket“ aus irgendeinem Forum.</li>
+        <li>jede Datei auf <b>SHA1</b> geprüft wird. Passt was nicht → sofortiger Abbruch.</li>
+        <li>deine alten Mods vorher in ein Backup wandern. Nichts wird heimlich gelöscht.</li>
+      </ul>
+      <p class="safe-punch">Kurzfassung: Es ist safe, weil es safe ist.</p>
+    </div>
+  </section>
 
 </main>
 
 <footer class="foot">
-  <div class="foot-in">
-    <p class="big">Kein offizielles Mojang-/Microsoft-/Fabric-Produkt. Minecraft gehört denen,
-       die Mods ihren Machern. Installiert wird nur Fabric für 1.20.1 – nichts anderes. GG.</p>
-    <p class="small">Mods: <a href="https://modrinth.com" target="_blank" rel="noopener noreferrer">Modrinth</a> ·
-       Loader: <a href="https://fabricmc.net" target="_blank" rel="noopener noreferrer">FabricMC</a> ·
-       Website liest <code>config/modpack.json</code> live aus dem Repo.</p>
+  <div class="wrap">
+    <span>Privates Spaßprojekt – kein Tracking, keine Werbung, keine Affiliate-Links.</span>
+    <span>Quellcode: <a href="https://github.com/92mxs21/fabric-1.20.1-modpack" rel="noopener nofollow">github.com/92mxs21/fabric-1.20.1-modpack</a></span>
   </div>
 </footer>
 
 <script>
+"use strict";
 (function () {
-  "use strict";
+  /* ---------- Daten aus config/modpack.json (same-origin, kein Drittanbieter) ---------- */
+  var CONFIG_URL = "./config/modpack.json";
 
-  var REPO    = "https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main";
-  var RAW     = REPO + "/config/modpack.json";
-  var CMD     = "powershell -NoProfile -ExecutionPolicy Bypass -Command \"irm " + REPO + "/install.ps1 | iex\"";
-  var PIX     = "assets/mc/";
-  var ICONS   = ["diamond","emerald","gold_ingot","iron_ingot","netherite_ingot","experience_bottle","golden_apple","apple"];
-  var COLORS  = ["#55c22b","#f6c445","#c2544a","#7cc4ef","#d66a3a","#8a5b29","#b39bff","#3f8b1f"];
-
-  function el(id) { return document.getElementById(id); }
-
-  /* ---------- Konfiguration laden (mit Fallbacks) ---------- */
-  function fetchConfig() {
-    // 1) same-origin: auf GitHub Pages liegt config/ direkt im Repo -> immer aktuell
-    // 2) Raw als Fallback (falls jemand die Datei woanders hinkopiert)
-    var sources = ["./config/modpack.json", RAW];
-    var lastErr = null;
-    function attempt() {
-      if (!sources.length) return Promise.reject(lastErr || new Error("k.A."));
-      var src = sources.shift();
-      return fetch(src, { cache: "no-store" })
-        .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-        .catch(function (e) { lastErr = e; return attempt(); });
+  function iconSVG(name) {
+    var pat = {
+      "enchanted_book":  ["..##.", ".####", "#####", ".####", "..##."],
+      "experience_bottle":[".#...", "#####", "#####", "..###", "..#.."],
+      "golden_apple":    [".###.", "#...#", "#...#", "#...#", "..##."],
+      "iron_ingot":      ["#####", ".....", "###..", "....#", "#####"],
+      "ender_pearl":     ["#...#", ".###.", ".###.", ".###.", "#...#"],
+      "diamond":         ["..#..", ".###.", "#####", ".###.", "..#.."],
+      "totem_of_undying":["##.##", "#####", "#...#", ".###.", "..#.."]
+    }[name] || ["....." ,"....." ,"....." ,"....." ,"....."];
+    var col = {
+      "enchanted_book":   ["#a9713b", "#7c4f24"],
+      "experience_bottle":["#5ac86c", "#3a9c4a"],
+      "golden_apple":     ["#e8b93d", "#b9851f"],
+      "iron_ingot":       ["#cfd8da", "#8f9aa1"],
+      "ender_pearl":      ["#1f8a8a", "#0f5b5b"],
+      "diamond":          ["#46d6e0", "#1e9aa5"],
+      "totem_of_undying": ["#b3c423", "#7f9212"]
+    }[name] || ["#9aa79b", "#6b766d"];
+    var cells = [];
+    for (var y = 0; y < pat.length; y++) {
+      for (var x = 0; x < pat[y].length; x++) {
+        var c = pat[y][x];
+        if (c === "#" || c === "+") {
+          cells.push('<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + (c === "#" ? col[0] : col[1]) + '"/>');
+        }
+      }
     }
-    return attempt();
+    return '<svg viewBox="0 0 5 5" width="26" height="26" role="img" aria-label="' + name + '">' + cells.join("") + "</svg>";
   }
 
-  /* ---------- Infos rendern ---------- */
-  function renderFacts(cfg) {
-    var v = cfg.versions || {};
-    var items = [
-      ["MC", v.minecraft || "1.20.1"],
-      ["Fabric Loader", v.loader || "0.19.5"],
-      ["Installer", v.installer || "1.1.2"],
-      ["Script", "v" + (v.script || cfg.scriptVersion || "1.1.0")]
-    ];
-    var wrap = el("facts");
-    wrap.innerHTML = "";
-    items.forEach(function (it) {
-      var c = document.createElement("span");
-      c.className = "fact-chip";
-      c.innerHTML = "<b>" + it[0] + "</b> " + it[1];
-      wrap.appendChild(c);
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m];
     });
-    el("chipScript").textContent = "v" + (v.script || cfg.scriptVersion || "1.1.0");
   }
 
-  function renderMods(cfg) {
-    var tbody = el("modRows");
-    var mods = cfg.mods || [];
-    tbody.innerHTML = "";
-    mods.forEach(function (m, i) {
-      var tr = document.createElement("tr");
-      var tdName = document.createElement("td");
-      tdName.className = "mod";
+  /* ---------- Kopieren: 3 Wege, unzerstörbar (uBlock & Co egal) ---------- */
+  var CMD = (document.getElementById("cmdinput") || {}).value || "";
 
-      var slot = document.createElement("span");
-      slot.className = "slot";
-      var img = document.createElement("img");
-      img.className = "row-ico pix";
-      img.alt = "";
-      img.src = PIX + (m.icon || ICONS[i % ICONS.length]) + ".png";
-      slot.appendChild(img);
-      tdName.appendChild(slot);
+  function burstConfetti(btn) {
+    var rect = (btn || document.body).getBoundingClientRect();
+    var colors = ["#2e9e45", "#46d6e0", "#e8b93d", "#cfd8da", "#b3c423"];
+    for (var i = 0; i < 26; i++) {
+      var s = document.createElement("span");
+      s.className = "confetti";
+      s.style.background = colors[i % colors.length];
+      s.style.left = (rect.left + rect.width / 2) + "px";
+      s.style.top = (rect.top + rect.height / 2) + "px";
+      var ang = Math.random() * Math.PI * 2;
+      var dist = 40 + Math.random() * 90;
+      s.style.setProperty("--dx", (Math.cos(ang) * dist).toFixed(0) + "px");
+      s.style.setProperty("--dy", (Math.sin(ang) * dist + 30).toFixed(0) + "px");
+      s.style.setProperty("--rot", (Math.random() * 720 - 360).toFixed(0) + "deg");
+      document.body.appendChild(s);
+      (function (el) { setTimeout(function () { el.remove(); }, 750); })(s);
+    }
+  }
 
-      var link = document.createElement("a");
-      link.href = "https://modrinth.com/mod/" + encodeURIComponent(m.slug);
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.textContent = m.name;
-      tdName.appendChild(link);
+  function onCopied(btn) {
+    if (!btn) { btn = document.getElementById("copybtn"); }
+    if (btn) {
+      var old = btn.textContent;
+      btn.textContent = "KOPIERT!";
+      btn.classList.add("copied");
+      setTimeout(function () { btn.textContent = old; btn.classList.remove("copied"); }, 1600);
+      burstConfetti(btn);
+    }
+  }
 
-      var tdVer = document.createElement("td");
-      var ver = document.createElement("code");
-      ver.textContent = m.version || m.modrinthVersion || "?";
-      tdVer.appendChild(ver);
+  function legacyCopy(text, okcb) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    if (ok) { okcb(); return true; }
+    // Extremer Fall: manuell kopierbar machen – Feld fokussieren + markieren
+    var inp = document.getElementById("cmdinput");
+    if (inp) { inp.focus(); inp.select(); }
+    return false;
+  }
 
-      var tdNote = document.createElement("td");
-      tdNote.className = "note";
-      tdNote.textContent = m.bemerkung || "–";
+  var lastCopy = 0;
+  function doCopy() {
+    var now = Date.now();
+    if (now - lastCopy < 250) { return; }  // Doppel-Feuer (onclick + listener) verhindern
+    lastCopy = now;
+    var btn = document.getElementById("copybtn");
+    if (!CMD) {
+      var inp = document.getElementById("cmdinput");
+      if (inp) { inp.select(); }
+      return;
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(CMD).then(function () { onCopied(btn); })
+        .catch(function () { legacyCopy(CMD, function () { onCopied(btn); }); });
+    } else {
+      legacyCopy(CMD, function () { onCopied(btn); });
+    }
+  }
+  window.__doCopy = doCopy;
 
-      tr.appendChild(tdName);
-      tr.appendChild(tdVer);
-      tr.appendChild(tdNote);
-      tbody.appendChild(tr);
-    });
-    el("modStatus").textContent = mods.length + " Mods · alle fest gepinnt in modpack.json (kein Stress, nix bricht)";
+  var copyBtn = document.getElementById("copybtn");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", doCopy);   // nur dieser eine Weg nötig
+  }
+
+  /* ---------- Mods + Version aus der Config laden ---------- */
+  function fetchConfig() {
+    return fetch(CONFIG_URL, { cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) { throw new Error("HTTP " + r.status); }
+        return r.json();
+      });
   }
 
   fetchConfig().then(function (cfg) {
-    renderFacts(cfg);
-    renderMods(cfg);
-  }).catch(function (e) {
-    el("modStatus").innerHTML = "Modliste kaputt geladen. Schau in die <a href=\"" + REPO +
-      "/blob/main/config/modpack.json\" target=\"_blank\" rel=\"noopener noreferrer\">modpack.json</a>.";
-    el("modRows").innerHTML = '<tr><td colspan="3" class="placeholder">Laden fail</td></tr>';
-  });
-
-  /* ---------- Tipp-Animation für den Befehl ---------- */
-  var codeEl = el("oneline");
-  var timer = null;
-  function typeIt() {
-    var i = 0, shown = 0;
-    var cursor = '<span class="cur">▌</span>';
-    clearInterval(timer);
-    timer = setInterval(function () {
-      i++;
-      shown = i;
-      codeEl.innerHTML = CMD.slice(0, shown).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + cursor;
-      if (i >= CMD.length) { clearInterval(timer); codeEl.innerHTML = codeEl.innerHTML.replace(cursor, '<span class="cur blink">▌</span>'); }
-    }, 16);
-  }
-  window.addEventListener("load", function () { setTimeout(typeIt, 400); });
-
-  /* ---------- Kopieren + Block-Confetti ---------- */
-  var copyBtn  = el("copyBtn");
-  var copyLbl  = el("copyLabel");
-  copyBtn.addEventListener("click", function () {
-    function done() {
-      copyLbl.textContent = "gg, kopiert!";
-      copyBtn.classList.add("good");
-      confettiBurst();
-      setTimeout(function () {
-        copyLbl.textContent = "kopieren";
-        copyBtn.classList.remove("good");
-      }, 1800);
+    var chip = document.getElementById("chipScript");
+    if (chip && cfg && cfg.versions && cfg.versions.script) {
+      chip.textContent = "v" + cfg.versions.script;
     }
-    function legacy() {
-      var ta = document.createElement("textarea");
-      ta.value = CMD;
-      ta.style.position = "fixed"; ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      try { document.execCommand("copy"); } catch (e) {}
-      document.body.removeChild(ta);
+    var rows = document.getElementById("modrows");
+    if (!rows || !cfg || !cfg.mods || !cfg.mods.length) { return; }
+    rows.innerHTML = "";
+    cfg.mods.forEach(function (m) {
+      var tr = document.createElement("tr");
+      var tdName = document.createElement("td");
+      var nameWrap = document.createElement("div");
+      nameWrap.className = "modname";
+      nameWrap.innerHTML = iconSVG(m.icon || "diamond") + "<span>" + esc(m.name) + "</span>";
+      tdName.appendChild(nameWrap);
+      var tdVer = document.createElement("td");
+      tdVer.className = "modver";
+      tdVer.textContent = m.version || m.modrinthVersion || "?";
+      var tdNote = document.createElement("td");
+      tdNote.className = "modnote";
+      tdNote.textContent = m.bemerkung || "";
+      tr.appendChild(tdName);
+      tr.appendChild(tdVer);
+      tr.appendChild(tdNote);
+      rows.appendChild(tr);
+    });
+  }).catch(function () {
+    var rows = document.getElementById("modrows");
+    if (rows) {
+      rows.innerHTML = '<tr class="msg-row"><td colspan="3">Konfiguration gerade nicht erreichbar – bitte Seite neu laden.</td></tr>';
     }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(CMD).then(done, function () { legacy(); done(); });
-    } else { legacy(); done(); }
   });
-
-  function confettiBurst() {
-    var box = document.createElement("div");
-    box.className = "fx";
-    document.body.appendChild(box);
-    for (var i = 0; i < 36; i++) {
-      var s = document.createElement("span");
-      var sz = 6 + Math.floor(Math.random() * 10);
-      s.style.left = (2 + Math.random() * 96) + "vw";
-      s.style.width = sz + "px";
-      s.style.height = sz + "px";
-      s.style.background = COLORS[Math.floor(Math.random() * COLORS.length)];
-      s.style.animationDelay = (Math.random() * 0.35) + "s";
-      s.style.animationDuration = (1.3 + Math.random() * 1.2) + "s";
-      s.style.transform = "rotate(" + Math.floor(Math.random() * 360) + "deg)";
-      box.appendChild(s);
-    }
-    setTimeout(function () { box.remove(); }, 3500);
-  }
-
-  /* ---------- Tag/Nacht ---------- */
-  var dn = el("daynight");
-  function applyNight(n) {
-    document.body.classList.toggle("night", n);
-    try { localStorage.setItem("mcp-night", n ? "1" : "0"); } catch (e) {}
-  }
-  dn.addEventListener("click", function () {
-    applyNight(!document.body.classList.contains("night"));
-  });
-  var saved = null;
-  try { saved = localStorage.getItem("mcp-night"); } catch (e) {}
-  if (saved === "1") applyNight(true);
 })();
 </script>
 </body>
