@@ -1,133 +1,263 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Minecraft 1.20.1 + Fabric Modpack &mdash; Installer</title>
-<meta name="description" content="Automatischer Windows-PowerShell-Installer für Minecraft 1.20.1 mit Fabric und ausgewählten Modrinth-Mods.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fabric 1.20.1 Modpack – Installer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%236fae43'/%3E%3Crect width='16' height='4' fill='%234e7d2c'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header class="hero">
-  <div class="container">
-    <p class="badges">
-      <span class="badge">Minecraft 1.20.1</span>
-      <span class="badge badge-fabric">Fabric</span>
-      <span class="badge badge-modrinth">Modrinth</span>
-      <span class="badge">Windows &middot; PowerShell</span>
-    </p>
-    <h1>Minecraft <span class="accent">1.20.1</span> + Fabric Modpack</h1>
-    <p class="sub">Ein Einzeiler installiert Minecraft 1.20.1 mit Fabric (neuester Loader) und genau sieben versionierten Mods &ndash; vollautomatisch und idempotent.</p>
-
-    <div class="cmdbox">
-      <p class="cmd-label">Der One-Line-Befehl &mdash; in PowerShell oder auch in <kbd>cmd</kbd> einfügen:</p>
-      <div class="cmd-row">
-        <code id="oneliner">powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/DeutscherCOder/fabric-1.20.1-modpack/main/install.ps1 | iex"</code>
-        <button id="copybtn" onclick="copyCmd()">Kopieren</button>
-      </div>
-      <p class="cmd-hint">Schon in einem PowerShell-Fenster? Dann reicht: <code>irm https://raw.githubusercontent.com/DeutscherCOder/fabric-1.20.1-modpack/main/install.ps1 | iex</code></p>
-      <p id="copied" class="copied hidden">&#10003; Befehl kopiert!</p>
-    </div>
+<header class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" class="brand-ico" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" fill="#6fae43" stroke="#4e7d2c" stroke-width="2"/>
+      <rect x="6" y="6" width="12" height="3" fill="#4e7d2c"/>
+      <rect x="6" y="15" width="12" height="3" fill="#8fd265"/>
+      <rect x="6" y="9" width="3" height="3" fill="#8fd265"/>
+      <rect x="15" y="12" width="3" height="3" fill="#4e7d2c"/>
+    </svg>
+    <span>Fabric&nbsp;1.20.1&nbsp;Modpack</span>
   </div>
+  <span class="chip chip-gold" id="chipScript">Installer-Script v…</span>
 </header>
 
-<main class="container">
-  <section class="card">
-    <h2>&#128295; Was wird installiert?</h2>
-    <ul class="checks">
-      <li><strong>Minecraft 1.20.1 (Fabric)</strong> &ndash; Profil über den <strong>offiziellen Fabric Installer</strong> (CLI), der Loader wird immer automatisch auf die neueste verfügbare Version f&uuml;r 1.20.1 gesetzt.</li>
-      <li><strong>Exakt 7 Mods von Modrinth</strong> in fest gepinnten Versionen &ndash; nur Fabric/1.20.1-Dateien, verifiziert per SHA1-Pr&uuml;fsumme.</li>
-      <li><strong>Backup:</strong> Bereits vorhandene, nicht ben&ouml;tigte&nbsp;.jar-Mods werden vor der Installation in einen datierten <code>mods-backup</code>-Ordner verschoben.</li>
-      <li><strong>Idempotent:</strong> Ein erneuter Lauf installiert nichts doppelt und ist gefahrlos.</li>
-    </ul>
+<div class="grass" aria-hidden="true"></div>
+
+<main class="wrap">
+
+  <section class="hero">
+    <h1>Minecraft <em>1.20.1</em> + Fabric</h1>
+    <p class="sub">Sieben fest gepinnte Mods von Modrinth – installiert mit dem
+       offiziellen Fabric Installer. Nur <strong>Fabric</strong>, nur
+       <strong>1.20.1</strong>, nichts anderes.</p>
+
+    <div class="facts" id="facts">
+      <span class="chip">Minecraft-Version: lädt …</span>
+    </div>
+
+    <div class="cmd">
+      <div class="cmd-label">
+        <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v10m0 0l-4-4m4 4l4-4"/></svg>
+        Einzeiler-Installation (Windows PowerShell)
+      </div>
+      <div class="cmd-row">
+        <code id="oneline">powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/DeutscherCOder/fabric-1.20.1-modpack/main/install.ps1 | iex"</code>
+        <button id="copyBtn" type="button">
+          <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="1"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="copyLabel">Kopieren</span>
+        </button>
+      </div>
+      <p class="cmd-hint">Das Script erkennt <code>%APPDATA%\.minecraft</code> von selbst,
+         legt das Fabric-Profil an, lädt die Mods herunter und prüft jeden Download per SHA1.
+         Fremde Mod-Jars werden vorher in einen <code>&lt;Zeitstempel&gt;modbackup</code>-Ordner
+         verschoben.</p>
+    </div>
   </section>
 
-  <section class="card">
-    <h2>&#129495; Die Mods (Versionen)</h2>
-    <div class="table-wrap">
+  <section class="card" id="mods">
+    <h2>
+      <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8zM3.3 8.2L12 12.8l8.7-4.6M12 12.8V21"/></svg>
+      Enthaltene Mods
+    </h2>
+    <p class="muted" id="modStatus">Lade Modliste aus <code>modpack.json</code> …</p>
+    <div class="tablewrap">
       <table>
         <thead>
           <tr><th>Mod</th><th>Version</th><th>Bemerkung</th></tr>
         </thead>
-        <tbody>
-          <tr><td>Architectury</td><td>9.2.14</td><td>Multi-Loader-API</td></tr>
-          <tr><td>Cloth Config</td><td>11.1.136</td><td>Konfigurations-API</td></tr>
-          <tr><td>Dreamshift</td><td>0.1.4.3.1</td><td>Nachtsprung / Teleport</td></tr>
-          <tr><td>Fabric API</td><td>0.92.12+1.20.1</td><td>Basis-API f&uuml;r Fabric</td></tr>
-          <tr><td>Immersive Portals</td><td>5.2.0</td><td>Portale &uuml;ber Dimensionen</td></tr>
-          <tr><td>Sodium</td><td>0.5.13</td><td>Performance-Renderer</td></tr>
-          <tr><td>Simple Voice Chat</td><td>2.4.32</td><td>In-Game-Sprachchat</td></tr>
+        <tbody id="modRows">
+          <tr><td colspan="3" class="placeholder">…</td></tr>
         </tbody>
       </table>
     </div>
+    <p class="muted note">Alle Versionen sind fest gepinnt und wurden gegen die Modrinth API
+       verifiziert. Separate Quell-/API-Jars werden ignoriert – installiert wird ausschließlich
+       die primäre <code>.jar</code>-Datei je Mod.</p>
   </section>
 
-  <section class="card">
-    <h2>&#9889; Voraussetzungen</h2>
-    <ul class="checks">
-      <li>Windows mit PowerShell 5.1 oder neuer (ist standardm&auml;&szlig;ig installiert).</li>
-      <li>Der <strong>offizielle Minecraft-Launcher</strong> (einmal gestartet, damit der <code>.minecraft</code>-Ordner existiert).</li>
-      <li><strong>Java 17</strong> f&uuml;r Minecraft 1.20.1 (falls nicht gefunden, l&auml;dt das Script automatisch Temurin JRE 17).</li>
-      <li>Internetzugriff zu <code>meta.fabricmc.net</code>, <code>maven.fabricmc.net</code> und <code>api.modrinth.com</code>.</li>
-    </ul>
-  </section>
+  <div class="grid2">
+    <section class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 3v10m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        So installierst du
+      </h2>
+      <ol class="steps">
+        <li>
+          <span class="step-n">1</span>
+          Öffne PowerShell, füge den Einzeiler oben ein und bestätige mit Enter.
+        </li>
+        <li>
+          <span class="step-n">2</span>
+          Das Script lädt – falls nötig – Java, installiert den Fabric-Loader (aktuellste
+          Version für 1.20.1) und danach alle Mods.
+        </li>
+        <li>
+          <span class="step-n">3</span>
+          Starte den offiziellen Launcher und wähle das Profil
+          <code>fabric-loader-…-1.20.1</code>.
+        </li>
+      </ol>
+    </section>
 
-  <section class="card">
-    <h2>&#128257; Wie funktioniert das Script?</h2>
-    <ol class="steps">
-      <li>L&auml;dt die Konfiguration <code>config/modpack.json</code> (aus dem Repo, wenn n&ouml;tig).</li>
-      <li>Erkennt automatisch <code>%APPDATA%\.minecraft</code>.</li>
-      <li>Pr&uuml;ft Java und l&auml;dt bei Bedarf Temurin JRE 17 herunter.</li>
-      <li>Ermittelt neuesten Fabric Loader f&uuml;r 1.20.1 und l&auml;dt den offiziellen Fabric Installer.</li>
-      <li>Installiert das Fabric-Profil per <code>java -jar fabric-installer.jar client -mcversion 1.20.1 -loader &lt;neueste&gt; -dir &lt;.minecraft&gt;</code>.</li>
-      <li>Sichert fremde .jar-Mods in <code>mods-backup\&lt;Zeitstempel&gt;</code>.</li>
-      <li>L&auml;dt die 7 gepinnten Mods von der Modrinth API und verifiziert jede SHA1-Pr&uuml;fsumme.</li>
-    </ol>
-  </section>
+    <section class="card">
+      <h2>
+        <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="M9.5 11.5l2 2 3.5-3.5"/></svg>
+        Geprüfte Details
+      </h2>
+      <ul class="checks">
+        <li>Wiederholte Ausführung ist gefahrlos – korrekte Dateien werden übersprungen (idempotent).</li>
+        <li>Nicht benötigte Mod-Jars landen als Sicherung in <code>&lt;Zeitstempel&gt;modbackup</code>.</li>
+        <li>Jeder Download wird auf Größe und SHA1-Prüfsumme geprüft.</li>
+        <li>Sollte Java fehlen, lädt das Script automatisch Temurin&nbsp;JRE&nbsp;17.</li>
+      </ul>
+    </section>
+  </div>
 
-  <section class="card">
-    <h2>&#128279; N&uuml;tzliche Befehle</h2>
-    <div class="cmdgrid">
-      <div>
-        <p class="cmd-label">Nur pr&uuml;fen / Vorschau (DryRun):</p>
-        <div class="cmd-row"><code>powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/DeutscherCOder/fabric-1.20.1-modpack/main/install.ps1 -OutFile $env:TEMP\install.ps1; &amp; $env:TEMP\install.ps1 -DryRun"</code></div>
-      </div>
-      <div>
-        <p class="cmd-label">Lokal aus dem Repo ausf&uuml;hren:</p>
-        <div class="cmd-row"><code>git clone https://github.com/DeutscherCOder/fabric-1.20.1-modpack.git &amp;&amp; cd fabric-1.20.1-modpack &amp;&amp; .\install.ps1</code></div>
-      </div>
-      <div>
-        <p class="cmd-label">Mit eigenem Minecraft-Ordner:</p>
-        <div class="cmd-row"><code>.\install.ps1 -MinecraftDir D:\Spiele\.minecraft</code></div>
-      </div>
-    </div>
-  </section>
 </main>
 
-<footer class="footer">
-  <div class="container">
-    <p>Kein offizielles Mojang- oder Fabric-Produkt. Nicht von Mojang oder Microsoft unterst&uuml;tzt. Mods &copy; ihrer jeweiligen Autoren &middot; Quelle: <a href="https://github.com/DeutscherCOder/fabric-1.20.1-modpack" target="_blank" rel="noopener">GitHub-Repository</a></p>
-  </div>
+<footer>
+  <span>Fabric 1.20.1 Modpack – Installer für Windows</span>
+  <span class="muted">Kein offizielles Mojang-, Microsoft- oder Fabric-Produkt. Die Mods gehören ihren Autoren.</span>
 </footer>
 
 <script>
-function copyCmd() {
-  const el = document.getElementById('oneliner');
-  const text = el.innerText;
-  const done = () => {
-    const c = document.getElementById('copied');
-    c.classList.remove('hidden');
-    setTimeout(() => c.classList.add('hidden'), 2000);
-  };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done);
-  } else {
-    const ta = document.createElement('textarea');
-    ta.value = text; document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta); done();
+(function () {
+  "use strict";
+
+  var RAW = "https://raw.githubusercontent.com/DeutscherCOder/fabric-1.20.1-modpack/main/config/modpack.json";
+
+  function el(id) { return document.getElementById(id); }
+
+  function fetchConfig() {
+    var sources = [RAW, "../config/modpack.json", "./config/modpack.json"];
+    var lastErr = null;
+    function attempt() {
+      if (!sources.length) return Promise.reject(lastErr || new Error("k.A."));
+      var src = sources.shift();
+      return fetch(src, { cache: "no-store" })
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.json();
+        })
+        .catch(function (e) { lastErr = e; return attempt(); });
+    }
+    return attempt();
   }
-}
+
+  // Inline-SVG-Bausteine für die Tabellen-Zeile (keine Emojis)
+  var dotColors = ["#6fae43", "#e8b43d", "#c2544a", "#5aa2c9", "#c98a3d", "#8a5a33", "#7f6fae"];
+
+  function renderFacts(cfg) {
+    var v = cfg.versions || {};
+    var items = [
+      ["Minecraft", v.minecraft || cfg.minecraftVersion || "1.20.1", ""],
+      ["Fabric Loader", v.loader || "0.19.5", "Stand – wird bei Installation automatisch auf die neueste gesetzt"],
+      ["Fabric Installer", v.installer || "1.1.2", ""],
+      ["Installer-Script", "v" + (v.script || cfg.scriptVersion || "1.1.0"), ""]
+    ];
+    var wrap = el("facts");
+    wrap.innerHTML = "";
+    items.forEach(function (it) {
+      var chip = document.createElement("span");
+      chip.className = "chip";
+      chip.innerHTML = "<b>" + it[0] + ":</b> " + it[1];
+      if (it[2]) {
+        chip.title = it[2];
+        chip.classList.add("chip-tip");
+      }
+      wrap.appendChild(chip);
+    });
+    var s = el("chipScript");
+    var sv = v.script || cfg.scriptVersion;
+    s.textContent = sv ? "Installer-Script v" + sv : "Installer-Script";
+  }
+
+  function renderMods(cfg) {
+    var tbody = el("modRows");
+    var mods = cfg.mods || [];
+    tbody.innerHTML = "";
+    mods.forEach(function (m, i) {
+      var tr = document.createElement("tr");
+      var dot = dotColors[i % dotColors.length];
+
+      var tdName = document.createElement("td");
+      tdName.className = "mod";
+      var dotEl = document.createElement("span");
+      dotEl.className = "dot";
+      dotEl.style.background = dot;
+      tdName.appendChild(dotEl);
+      var link = document.createElement("a");
+      link.href = "https://modrinth.com/mod/" + encodeURIComponent(m.slug);
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = m.name;
+      tdName.appendChild(link);
+
+      var tdVer = document.createElement("td");
+      var ver = document.createElement("code");
+      ver.textContent = m.version || m.modrinthVersion || "?";
+      tdVer.appendChild(ver);
+
+      var tdNote = document.createElement("td");
+      tdNote.className = "note-cell";
+      tdNote.textContent = m.bemerkung || "–";
+
+      tr.appendChild(tdName);
+      tr.appendChild(tdVer);
+      tr.appendChild(tdNote);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function failMods(msg) {
+    el("modStatus").innerHTML = "Modliste konnte nicht geladen werden. Fallback siehe " +
+      '<a href="https://github.com/DeutscherCOder/fabric-1.20.1-modpack/blob/main/config/modpack.json" target="_blank" rel="noopener noreferrer">modpack.json</a>.' +
+      "<br><span class=\"err\">" + msg + "</span>";
+    el("modRows").innerHTML = '<tr><td colspan="3" class="placeholder">Laden fehlgeschlagen</td></tr>';
+  }
+
+  fetchConfig().then(function (cfg) {
+    var count = (cfg.mods || []).length;
+    el("modStatus").textContent = count + " Mods – fest gepinnt in modpack.json";
+    renderFacts(cfg);
+    renderMods(cfg);
+  }).catch(function (e) {
+    failMods(String(e && e.message ? e.message : e));
+  });
+
+  // Kopieren-Button (mit Legacy-Fallback für ältere Browser)
+  var codeEl = el("oneline");
+  var copyBtn = el("copyBtn");
+  var copyLabel = el("copyLabel");
+  copyBtn.addEventListener("click", function () {
+    var done = function () {
+      copyLabel.textContent = "Kopiert";
+      copyBtn.classList.add("done");
+      setTimeout(function () {
+        copyLabel.textContent = "Kopieren";
+        copyBtn.classList.remove("done");
+      }, 1800);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(codeEl.textContent).then(done, function () { legacyCopy(); done(); });
+    } else {
+      legacyCopy();
+      done();
+    }
+  });
+  function legacyCopy() {
+    var ta = document.createElement("textarea");
+    ta.value = codeEl.textContent;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+})();
 </script>
 </body>
 </html>

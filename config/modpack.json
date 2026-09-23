@@ -1,50 +1,64 @@
 {
   "schemaVersion": 1,
+  "scriptVersion": "1.1.0",
   "minecraftVersion": "1.20.1",
   "loader": "fabric",
   "autoDownloadJava": true,
+  "versions": {
+    "minecraft": "1.20.1",
+    "loader": "0.19.5",
+    "installer": "1.1.2",
+    "script": "1.1.0"
+  },
   "mods": [
     {
       "name": "Architectury",
       "slug": "architectury-api",
       "version": "9.2.14",
-      "modrinthVersion": "9.2.14+fabric"
+      "modrinthVersion": "9.2.14+fabric",
+      "bemerkung": "Multi-Loader-API (Fabric/Forge) – wird von vielen Mods mitgenutzt"
     },
     {
       "name": "Cloth Config",
       "slug": "cloth-config",
       "version": "11.1.136",
-      "modrinthVersion": "11.1.136+fabric"
+      "modrinthVersion": "11.1.136+fabric",
+      "bemerkung": "Konfigurations-API für Mods mit eigenem Einstellungsmenü"
     },
     {
       "name": "Dreamshift",
       "slug": "dreamshift",
       "version": "0.1.4.3.1",
-      "modrinthVersion": "0.1.4.3.1-fabric"
+      "modrinthVersion": "0.1.4.3.1-fabric",
+      "bemerkung": "Spielstand sicher speichern und an einer Basis weiterstarten"
     },
     {
       "name": "Fabric API",
       "slug": "fabric-api",
       "version": "0.92.12+1.20.1",
-      "modrinthVersion": "0.92.12+1.20.1"
+      "modrinthVersion": "0.92.12+1.20.1",
+      "bemerkung": "Basis-API – wird von fast allen anderen Mods vorausgesetzt"
     },
     {
       "name": "Immersive Portals",
       "slug": "immersiveportals",
       "version": "5.2.0",
-      "modrinthVersion": "5.2.0"
+      "modrinthVersion": "5.2.0",
+      "bemerkung": "Nahtlose Portale zwischen Dimensionen und Orten"
     },
     {
       "name": "Sodium",
       "slug": "sodium",
       "version": "0.5.13",
-      "modrinthVersion": "mc1.20.1-0.5.13-fabric"
+      "modrinthVersion": "mc1.20.1-0.5.13-fabric",
+      "bemerkung": "Leistungsstarker Renderer – deutlich mehr Bilder pro Sekunde"
     },
     {
       "name": "Simple Voice Chat",
       "slug": "simple-voice-chat",
       "version": "2.4.32",
-      "modrinthVersion": "fabric-1.20.1-2.4.32"
+      "modrinthVersion": "fabric-1.20.1-2.4.32",
+      "bemerkung": "Sprachchat direkt im Spiel (Push-to-Talk oder Freisprechen)"
     }
   ]
 }

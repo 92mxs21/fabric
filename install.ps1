@@ -11,7 +11,7 @@
    - Idempotent: Wiederholte Ausführung ist gefahrlos, bereits vorhandene und
      korrekte Dateien werden übersprungen.
    - Vorherige nicht benötigte .jar-Mods werden in einen datierten
-     mods-backup-ordner verschoben.
+     <Zeitstempel>modbackup-Ordner verschoben.
    - Übersichtliche Fortschrittsausgabe, Fehlerbehandlung mit Retry und
      SHA1-Verifikation aller Downloads.
    - Funktioniert als lokale Datei ODER per Einzeiler:
@@ -48,13 +48,19 @@ $script:RawBase        = 'https://raw.githubusercontent.com/DeutscherCOder/fabri
 $script:FabricMetaBase = 'https://meta.fabricmc.net/v2'
 $script:FabricMaven    = 'https://maven.fabricmc.net'
 $script:ModrinthApi    = 'https://api.modrinth.com/v2'
-$script:UserAgent      = 'Install-PS1/1.0 (Fabric 1.20.1 Modpack; +https://github.com/DeutscherCOder/fabric-1.20.1-modpack)'
+$script:UserAgent      = 'Install-PS1/1.1.0 (Fabric 1.20.1 Modpack; +https://github.com/DeutscherCOder/fabric-1.20.1-modpack)'
+$script:ScriptVersion  = '1.1.0'
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference    = 'SilentlyContinue'
 
 # TLS 1.2 für ältere Windows PowerShell 5.1 erzwingen
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12 } catch {}
+
+# Ausgabekodierung auf UTF-8 stellen, damit Umlaute (ä/ö/ü/ß) überall sauber
+# angezeigt werden: interaktiv, per "irm ... | iex" und in umgeleiteter Ausgabe
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
+$OutputEncoding = [System.Text.Encoding]::UTF8
 
 #------------------------------------------------------------------------------
 # Ausgabe-Helfer
@@ -109,29 +115,57 @@ function Invoke-FileDownload {
     for ($i = 1; $i -le $Retries; $i++) {
         try {
             if ((Test-Path $OutFile) -and (Get-Item $OutFile).Length -gt 0) { Remove-Item $OutFile -Force }
-            Write-Info "Starte Download: $Label -> $OutFile"
             $wc = New-Object System.Net.WebClient
             $wc.DownloadFileAsync([Uri]$Url, $OutFile)
-            $lastPct = -1
-            # Fortschritt im Main-Thread pollen (kein Event-Handler: der liefe auf
-            # einem Thread ohne Runspace und würde in PowerShell abstürzen)
+            # Echter Download-Prozess: im Haupt-Thread pollen und prozentualen
+            # Fortschritt samt MB und MB/s anzeigen (kein Event-Handler: der liefe
+            # auf einem Thread ohne Runspace und würde in PowerShell abstürzen)
+            $lastPct    = -1
+            $lastBytes  = [int64]0
+            $lastTick   = [Environment]::TickCount
+            $speed      = 0.0
+            $hadOutput  = $false
+            $firstBytes = $false
             while ($wc.IsBusy) {
-                Start-Sleep -Milliseconds 250
-                if ((Test-Path $OutFile) -and ($ExpectedSize -gt 0)) {
-                    $cur = (Get-Item $OutFile).Length
-                    if ($cur -lt $ExpectedSize) {
-                        $pct = [math]::Floor($cur * 100 / $ExpectedSize)
+                Start-Sleep -Milliseconds 300
+                if (-not (Test-Path $OutFile)) { continue }
+                $cur  = [int64](Get-Item $OutFile).Length
+                $now  = [Environment]::TickCount
+                $dt   = $now - $lastTick
+                if ($dt -ge 600) {
+                    if ($dt -gt 0) {
+                        $speed = [math]::Round((($cur - $lastBytes) * 1000.0) / $dt / 1MB, 2)
+                    }
+                    $lastTick  = $now
+                    $lastBytes = $cur
+                    $hadOutput = $true
+                    if ($ExpectedSize -gt 0) {
+                        $pct = [math]::Min(99, [math]::Floor(($cur * 100) / $ExpectedSize))
                         if ($pct -ne $lastPct) {
                             $lastPct = $pct
-                            Write-Host ("`r      {0}  {1,3}%  ({2:N1} / {3:N1} MB)  " -f $Label, $pct, ($cur / 1MB), ($ExpectedSize / 1MB)) -NoNewline
+                            Write-Host ("`r      {0,-22} {1,3} %  ({2,7:N1} / {3,7:N1} MB, {4,6:N1} MB/s)" -f $Label, $pct, ($cur / 1MB), ($ExpectedSize / 1MB), $speed) -NoNewline
                         }
+                    } else {
+                        # Größe unbekannt (z. B. Temurin-JRE zum Download vorbereiten):
+                        # nur geladene MB anzeigen, sobald überhaupt Bytes fließen
+                        if (-not $firstBytes -and $cur -gt 0) {
+                            $firstBytes = $true
+                            Write-Info "Starte Download: $Label -> $OutFile"
+                        }
+                        Write-Host ("`r      {0,-22} {1,7:N1} MB geladen, {2,6:N1} MB/s" -f $Label, ($cur / 1MB), $speed) -NoNewline
                     }
                 }
             }
             $wc.Dispose()
-            Write-Host ''
+            if ($hadOutput) { Write-Host ' ' }
+            if (-not ($hadOutput -or $firstBytes)) { Write-Info "Starte Download: $Label -> $OutFile" }
             if (-not (Test-Path $OutFile)) { throw 'Datei wurde nicht erstellt.' }
-            if ((Get-Item $OutFile).Length -le 0) { throw 'Datei ist leer.' }
+            $finalSize = (Get-Item $OutFile).Length
+            if ($finalSize -le 0) { throw 'Datei ist leer.' }
+            if ($ExpectedSize -gt 0 -and $finalSize -ne $ExpectedSize) {
+                throw "Größe unerwartet (erwartet: $ExpectedSize, erhalten: $finalSize)."
+            }
+            Write-Ok "$Label heruntergeladen ($([math]::Round($finalSize / 1MB, 1)) MB)."
             return
         } catch {
             Write-Host ''
@@ -314,7 +348,8 @@ function New-ModsBackup {
         return $null
     }
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-    $dest  = Join-Path (Split-Path $ModsDir -Parent) (Join-Path 'mods-backup' $stamp)
+    # Datierter Backup-Ordner direkt neben "mods": <Zeitstempel>modbackup
+    $dest = Join-Path (Split-Path $ModsDir -Parent) ($stamp + 'modbackup')
     Write-Info "Verschiebe $($toMove.Count) nicht benötigte .jar-Mod(s) nach:"
     Write-Info $dest
     if ($script:DryRun) {
@@ -326,6 +361,7 @@ function New-ModsBackup {
         Move-Item -Path $t.FullName -Destination (Join-Path $dest $t.Name) -Force
         Write-Info "  - $($t.Name)"
     }
+    Write-Ok "$($toMove.Count) Mod(s) nach '$dest' gesichert."
     return $dest
 }
 
@@ -357,11 +393,12 @@ $script:InvocationLine = $MyInvocation.Line
 try {
     # ------------------------------------------------------------------ Header
     Write-Host ''
-    Write-Host '==================================================================' -ForegroundColor DarkCyan
-    Write-Host '  Minecraft 1.20.1 + Fabric Modpack-Installer' -ForegroundColor Cyan
-    Write-Host '  Offizieller Fabric Installer (CLI) + Mods von Modrinth' -ForegroundColor Cyan
-    if ($script:DryRun) { Write-Host '  *** TROCKENLAUF (DryRun) - nichts wird verändert ***' -ForegroundColor Yellow }
-    Write-Host '==================================================================' -ForegroundColor DarkCyan
+    Write-Host '========================================================================' -ForegroundColor DarkCyan
+    Write-Host ("  Minecraft 1.20.1 + Fabric Modpack-Installer   v{0}" -f $script:ScriptVersion) -ForegroundColor Cyan
+    Write-Host '  Offizieller Fabric Installer (CLI)  |  Mods von Modrinth  |  nur Fabric/1.20.1' -ForegroundColor Cyan
+    if ($script:DryRun) { Write-Host '  *** TROCKENLAUF (DryRun) - es wird nichts veraendert ***' -ForegroundColor Yellow }
+    Write-Host '  Idempotent  |  Backup vor der Installation  |  SHA1-Verifikation' -ForegroundColor DarkGray
+    Write-Host '========================================================================' -ForegroundColor DarkCyan
 
     # ------------------------------------------------------------- 1) Konfiguration
     Write-StepTitle 'Schritt 1/10: Konfiguration laden'
@@ -493,7 +530,6 @@ try {
             Write-Info "DryRun: Download übersprungen -> $($r.FileName)"
             continue
         }
-        Write-Info "($di/$($resolvedMods.Count)) Lade $($r.FileName) herunter ..."
         Invoke-FileDownload -Url $r.Url -OutFile $dest -Label $r.Name -ExpectedSize $r.Size
         $hash = Get-Sha1 $dest
         if ($hash -ne $r.Sha1.ToLowerInvariant()) {

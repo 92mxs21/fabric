@@ -23,19 +23,19 @@ irm https://raw.githubusercontent.com/DeutscherCOder/fabric-1.20.1-modpack/main/
 Das Script erkennt automatisch `%APPDATA%\.minecraft`, prüft/lädt Java, installiert das
 Fabric-Profil (neuester Loader für 1.20.1) und legt anschließend die Mods in `mods/` an.
 **Nicht benötigte, bereits vorhandene `.jar`-Mods** werden vorher in einen datierten
-`mods-backup\<Zeitstempel>`-Ordner verschoben.
+`<Zeitstempel>modbackup`-Ordner verschoben (z. B. `20260923-143000modbackup`).
 
 ## 📦 Was installiert wird
 
-| Mod | Version | Datei (Fabric/1.20.1) |
-|---|---|---|
-| Architectury | 9.2.14 | `architectury-9.2.14-fabric.jar` |
-| Cloth Config | 11.1.136 | `cloth-config-11.1.136-fabric.jar` |
-| Dreamshift | 0.1.4.3.1 | `dreamshift-0.1.4.3.1-fabric.jar` |
-| Fabric API | 0.92.12+1.20.1 | `fabric-api-0.92.12+1.20.1.jar` |
-| Immersive Portals | 5.2.0 | `immersive-portals-5.2.0-mc1.20.1-fabric.jar` |
-| Sodium | 0.5.13 | `sodium-fabric-0.5.13+mc1.20.1.jar` |
-| Simple Voice Chat | 2.4.32 | `voicechat-fabric-1.20.1-2.4.32.jar` |
+| Mod | Version | Datei (Fabric/1.20.1) | Bemerkung |
+|---|---|---|---|
+| Architectury | 9.2.14 | `architectury-9.2.14-fabric.jar` | Multi-Loader-API |
+| Cloth Config | 11.1.136 | `cloth-config-11.1.136-fabric.jar` | Konfigurations-API |
+| Dreamshift | 0.1.4.3.1 | `dreamshift-0.1.4.3.1-fabric.jar` | Speichern & Basis-Rückkehr |
+| Fabric API | 0.92.12+1.20.1 | `fabric-api-0.92.12+1.20.1.jar` | Basis-API |
+| Immersive Portals | 5.2.0 | `immersive-portals-5.2.0-mc1.20.1-fabric.jar` | Portale zwischen Dimensionen |
+| Sodium | 0.5.13 | `sodium-fabric-0.5.13+mc1.20.1.jar` | Deutlich mehr FPS |
+| Simple Voice Chat | 2.4.32 | `voicechat-fabric-1.20.1-2.4.32.jar` | Sprachchat im Spiel |
 
 Alle Versionen wurden gegen die **Modrinth API** verifiziert; jeder Download wird per
 SHA1-Prüfsumme geprüft. Die Mod-Versionen sind in [`config/modpack.json`](config/modpack.json) fest gepinnt.
@@ -66,7 +66,7 @@ SHA1-Prüfsumme geprüft. Die Mod-Versionen sind in [`config/modpack.json`](conf
 6. Profil per CLI installieren:
    `java -jar fabric-installer.jar client -mcversion 1.20.1 -loader <neueste> -dir <verzeichnis>`
 7. Mod-Infos von der Modrinth API abrufen (nur `loaders=fabric`, `game_versions=1.20.1`)
-8. Fremde `.jar`-Mods nach `mods-backup\<Zeitstempel>` verschieben
+8. Fremde `.jar`-Mods nach `<Zeitstempel>modbackup` (direkt neben `mods/`) verschieben
 9. Mods herunterladen + SHA1-verifizieren (idempotent – korrekte Dateien werden übersprungen)
 
 ## 🔧 Konfiguration (`config/modpack.json`)
@@ -76,12 +76,19 @@ SHA1-Prüfsumme geprüft. Die Mod-Versionen sind in [`config/modpack.json`](conf
   "minecraftVersion": "1.20.1",      // fest auf 1.20.1
   "loader": "fabric",                // nur Fabric
   "autoDownloadJava": true,          // Temurin JRE 17 bei Bedarf laden
+  "versions": {                      // Anzeige-Versionen für die Website
+    "minecraft": "1.20.1",
+    "loader": "0.19.5",
+    "installer": "1.1.2",
+    "script": "1.1.0"
+  },
   "mods": [
     {
       "name": "Sodium",
       "slug": "sodium",              // Modrinth-Slug
       "version": "0.5.13",           // gewünschte Version
-      "modrinthVersion": "mc1.20.1-0.5.13-fabric" // exakte Modrinth-Versionsnummer
+      "modrinthVersion": "mc1.20.1-0.5.13-fabric", // exakte Modrinth-Versionsnummer
+      "bemerkung": "Deutlich mehr FPS"             // kurzer Hinweis (Website/README)
     }
   ]
 }
@@ -103,6 +110,9 @@ Minecraft-Versionen werden ignoriert.
 │   └── style.css
 └── README.md
 ```
+
+Die Website unter `docs/` liest die Mod-Liste **live aus `config/modpack.json`**
+(Fetch im Browser) und zeigt Mod-Name, Version und Bemerkung an.
 
 ## ⚠️ Hinweis
 
