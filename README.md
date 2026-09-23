@@ -6,9 +6,18 @@ Ein Windows-PowerShell-Installationssystem für einen **Minecraft-1.20.1-Client 
 
 ---
 
-## 🚀 Installation in einem Einzeiler
+## 🚀 Installation (einfachster Weg)
 
-In PowerShell **oder** in `cmd` einfügen:
+1. **`start-install.cmd` herunterladen** – Button „Schnellstart laden" auf der [Website](https://92mxs21.github.io/fabric-1.20.1-modpack/) oder direkt [start-install.cmd](start-install.cmd).
+2. **Doppelklick** auf die Datei. Falls Windows nachfragt: *Weitere Informationen → Trotzdem ausführen*.
+3. Das PowerShell-Fenster macht alles selbst: Java, Fabric-Profil, 7 Mods, Backup. Danach Launcher öffnen → Profil `fabric-loader-…` → spielen.
+
+Der `start-install.cmd` lädt den Installer beim Start einmalig aus diesem Repo
+(`irm … | iex` mit `-ExecutionPolicy Bypass`) – ohne manuelle Eingaben.
+
+### Fortgeschritten: Einzeiler
+
+Wer lieber direkt in PowerShell arbeitet (oder ohne Datei-Download):
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/92mxs21/fabric-1.20.1-modpack/main/install.ps1 | iex"
@@ -116,8 +125,9 @@ Es wird immer nur die primäre `.jar`-Datei eines Fabric-/1.20.1-Releases instal
 
 ```
 ├── install.ps1            # Hauptscript v1.2.0 (idempotent, Live-Fortschritt + Restzeit)
-├── index.html             # GitHub Pages Website (Copy-Paste-Befehl, Mod-Tabelle live)
-├── style.css              # Website-Styling (modern/hell, Fonts lokal gehostet)
+├── start-install.cmd      # Schnellstarter: Doppelklick -> lädt & startet install.ps1
+├── index.html             # GitHub Pages Website (Dark Theme, Download-Buttons, Mod-Tabelle live)
+├── style.css              # Website-Styling (dark, animierter Hintergrund, Fonts lokal)
 ├── assets/
 │   ├── mc/                # Echte Mojang-Texturen aus dem 1.20.1-Client
 │   └── fonts/             # VT323 + Press Start 2P (OFL) – lokal, kein CDN nötig
@@ -129,7 +139,10 @@ Es wird immer nur die primäre `.jar`-Datei eines Fabric-/1.20.1-Releases instal
 Die Website (Repo-Wurzel, GitHub Pages) liest die Mod-Liste **live aus
 `config/modpack.json`** (gleiche Origin – kein CDN-Cache-Problem) und zeigt
 Mod-Name, Pixel-Icon, Version und Bemerkung an. Es gibt **keine externen Requests**
-(Fonts/CSS/JS liegen im Repo) – deshalb blockiert auch kein Adblocker etwas.
+(Fonts/CSS/JS liegen im Repo). Die Seite enthält bewusst **keinen
+„kopiere & paste diesen PowerShell-Befehl“-Aufruf** – das liefert der Schnellstarter
+(`start-install.cmd`) per Doppelklick, ohne dass Adblocker (uBlock Origin & Co.)
+einen „ClickFix“-Schutz auslösen.
 
 ## ⚠️ Hinweis
 
